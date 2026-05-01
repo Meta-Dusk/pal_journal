@@ -68,6 +68,23 @@ class _EditSheetState extends State<EditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final amountInputField = TextField(
+      controller: _amountController,
+      keyboardType: const .numberWithOptions(decimal: true, signed: true),
+      inputFormatters: [PnLFormatter()],
+      style: const TextStyle(fontSize: 24, color: Colors.white),
+      decoration: InputDecoration(
+        hintText: "0.00",
+        prefixText: "₱ ",
+        filled: true,
+        fillColor: Colors.black26,
+        border: OutlineInputBorder(
+          borderRadius: .circular(12),
+          borderSide: .none,
+        ),
+      ),
+    );
+
     return SingleChildScrollView(
       padding: .only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -88,22 +105,7 @@ class _EditSheetState extends State<EditSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _amountController,
-            keyboardType: const .numberWithOptions(decimal: true, signed: true),
-            inputFormatters: [PnLFormatter()],
-            style: const TextStyle(fontSize: 24, color: Colors.white),
-            decoration: InputDecoration(
-              hintText: "0.00",
-              prefixText: "₱ ",
-              filled: true,
-              fillColor: Colors.black26,
-              border: OutlineInputBorder(
-                borderRadius: .circular(12),
-                borderSide: .none,
-              ),
-            ),
-          ),
+          amountInputField,
           const SizedBox(height: 12),
           TextField(
             controller: _noteController,

@@ -1,7 +1,7 @@
 # PAL: Journal
 
 This app helps you visually represent your total profits and losses over a large timeframe.
-The name "**PAL: Journal**" simply comes from the term used in investments or finances; "**PnL**". This basically means **Profits and Losses**. I simply swapped the '_n_' with '_A_'. The journal simply means that there are additional personal touches you can do for tracking your PnL.
+The name "**PAL: Journal**" simply comes from the term used in investments or finances; "**PnL**". This basically means **Profits and Losses**. I simply swapped the '_n_' with '_A_'. As for the "_journal_" part, this simply means that there are additional personal touches you can do for tracking your PnL.
 
 ## Preview
 
