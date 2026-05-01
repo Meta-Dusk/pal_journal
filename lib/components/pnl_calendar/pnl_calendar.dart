@@ -101,18 +101,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
     );
 
     if (shouldClearMonth == true) {
-      await isarService.deletePnLForMonth(_focusedDay);
       await _loadPnLData();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Month data cleared."),
-            backgroundColor: Colors.redAccent,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
     }
   }
 

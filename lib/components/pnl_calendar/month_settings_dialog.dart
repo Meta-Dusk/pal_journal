@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:isar/isar.dart';
+import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/services/csv_service.dart';
+import 'package:pal_journal/main.dart';
 
 Future<bool?> showMonthSettingsDialog(BuildContext context, DateTime month) {
   final monthName = DateFormat('MMMM yyyy').format(month);
@@ -29,7 +32,7 @@ Future<bool?> showMonthSettingsDialog(BuildContext context, DateTime month) {
         ListTileExportCSV(month: month),
         ListTileImportCSV(month: month),
         const Divider(color: Colors.white24, height: 32),
-        ListTileClearData(monthName: monthName),
+        ListTileClearData(month: month, monthName: monthName),
         const SizedBox(height: 16),
       ];
 
@@ -96,31 +99,69 @@ class ListTileImportCSV extends StatelessWidget {
 
   const ListTileImportCSV({super.key, required this.month});
 
-  /// Opens the file picker and runs the import logic
-  void _importCsvAction(BuildContext context) async {
+  static const String warningText =
+      "This will merge the CSV data into the current month."
+      "If a date in the CSV matches an existing entry, "
+      "the existing entry will be OVERWRITTEN.\n\nDo you want to continue?";
+
+  void _importCsvData(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: const Text(
+            "Import Data?",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            warningText,
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                "Import",
+                style: TextStyle(color: Colors.purpleAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true || !context.mounted) return;
+
     final success = await CsvService.importMonth(month);
 
     if (!context.mounted) return;
 
-    // Just close the sheet, or it means the user canceled the file picker
-    if (!success) Navigator.pop(context, false);
-
-    // Tell the calendar to refresh its data
-    Navigator.pop(context, true);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Data imported successfully!"),
-        backgroundColor: Colors.teal,
-        duration: Duration(seconds: 2),
-      ),
-    );
+    if (success) {
+      Navigator.pop(context, true); // Close bottom sheet & refresh
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Data imported successfully!",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.teal,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      Navigator.pop(context, false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: const Icon(Icons.file_download, color: Colors.purpleAccent),
+      leading: const Icon(Icons.download, color: Colors.purpleAccent),
       title: const Text(
         "Import from CSV",
         style: TextStyle(color: Colors.white),
@@ -129,15 +170,36 @@ class ListTileImportCSV extends StatelessWidget {
         "Merge spreadsheet data into this month",
         style: TextStyle(color: Colors.grey, fontSize: 12),
       ),
-      onTap: () async => _importCsvAction(context),
+      onTap: () async => _importCsvData(context),
     );
   }
 }
 
 class ListTileClearData extends StatelessWidget {
+  final DateTime month;
   final String monthName;
 
-  const ListTileClearData({super.key, required this.monthName});
+  const ListTileClearData({
+    super.key,
+    required this.month,
+    required this.monthName,
+  });
+
+  void _clearData(BuildContext context) async {
+    final confirm = await confirmationDialog(context, monthName);
+    if (confirm == true) {
+      await _deleteMonthData(month);
+      if (!context.mounted) return;
+      // Return true so the calendar knows to refresh the UI
+      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("$monthName data cleared."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,16 +213,39 @@ class ListTileClearData extends StatelessWidget {
         "Delete all entries for this month",
         style: TextStyle(color: Colors.grey, fontSize: 12),
       ),
-      onTap: () async {
-        // Show confirmation dialog
-        final confirm = await confirmationDialog(context, monthName);
-
-        // If confirmed, close the bottom sheet and return true to the calendar
-        if (confirm == true && context.mounted) {
-          Navigator.pop(context, true);
-        }
-      },
+      onTap: () async => _clearData(context),
     );
+  }
+
+  /// Bulletproof Isar deletion targeting the exact month boundaries
+  Future<void> _deleteMonthData(DateTime targetMonth) async {
+    final isar = await isarService.db;
+
+    // Start: The exact first microsecond of the 1st day of the month
+    final startOfMonth = DateTime(targetMonth.year, targetMonth.month, 1);
+
+    // End: We go to the 1st day of the NEXT month, and subtract 1 microsecond.
+    // This perfectly captures the absolute end of the target month (e.g., 23:59:59.999)
+    final endOfMonth = DateTime(
+      targetMonth.year,
+      targetMonth.month + 1,
+      1,
+    ).subtract(const Duration(microseconds: 1));
+
+    await isar.writeTxn(() async {
+      // Find all entries that fall within these boundaries
+      final entriesToDelete = await isar
+          .collection<PnLEntry>()
+          .filter()
+          .dateBetween(startOfMonth, endOfMonth)
+          .findAll();
+
+      // Extract their IDs and delete them all in one batch
+      final idsToDelete = entriesToDelete.map((e) => e.id).toList();
+
+      // We use where().anyId() with deleteAll to ensure strict safety
+      await isar.collection<PnLEntry>().deleteAll(idsToDelete);
+    });
   }
 }
 
