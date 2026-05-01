@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:pal_journal/main.dart';
-import 'package:pal_journal/screens/dashboard_screen.dart';
+import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
 class HomeScreen extends StatefulWidget {

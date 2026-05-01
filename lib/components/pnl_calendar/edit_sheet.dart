@@ -68,7 +68,7 @@ class _EditSheetState extends State<EditSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final amountInputField = TextField(
+    final amountTextField = TextField(
       controller: _amountController,
       keyboardType: const .numberWithOptions(decimal: true, signed: true),
       inputFormatters: [PnLFormatter()],
@@ -83,6 +83,85 @@ class _EditSheetState extends State<EditSheet> {
           borderSide: .none,
         ),
       ),
+    );
+
+    final noteTextField = TextField(
+      controller: _noteController,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: "Add a note...",
+        filled: true,
+        fillColor: Colors.black26,
+        border: OutlineInputBorder(
+          borderRadius: .circular(12),
+          borderSide: .none,
+        ),
+      ),
+    );
+
+    final breakDownHeaderRow = Row(
+      mainAxisAlignment: .spaceBetween,
+      children: [
+        const Text(
+          "Breakdown",
+          style: TextStyle(color: Colors.grey, fontWeight: .bold),
+        ),
+        TextButton.icon(
+          onPressed: () async {
+            final newItem = await showAddBreakdownDialog(context);
+            if (newItem != null) {
+              setState(() => _currentBreakdown.add(newItem));
+            }
+          },
+          icon: const Icon(Icons.add, size: 16, color: Colors.tealAccent),
+          label: const Text(
+            "Add Item",
+            style: TextStyle(color: Colors.tealAccent),
+          ),
+        ),
+      ],
+    );
+
+    final entryControlsRow = Row(
+      children: [
+        if (widget.entry != null && widget.entry!.amount != 0.0) ...[
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const .only(right: 12.0),
+              child: OutlinedButton(
+                onPressed: _clearData,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.redAccent,
+                  side: const BorderSide(color: Colors.redAccent),
+                  padding: const .symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: .circular(12)),
+                ),
+                child: const Text(
+                  "Reset",
+                  style: TextStyle(fontSize: 16, fontWeight: .bold),
+                ),
+              ),
+            ),
+          ),
+        ],
+        Expanded(
+          flex: 2,
+          child: ElevatedButton(
+            onPressed: _saveData,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.tealAccent.shade700,
+              foregroundColor: Colors.black,
+              padding: const .symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: .circular(12)),
+            ),
+            child: const Text(
+              "Save Entry",
+              style: TextStyle(fontSize: 16, fontWeight: .bold),
+            ),
+          ),
+        ),
+      ],
     );
 
     return SingleChildScrollView(
@@ -105,44 +184,12 @@ class _EditSheetState extends State<EditSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          amountInputField,
+          amountTextField,
           const SizedBox(height: 12),
-          TextField(
-            controller: _noteController,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: "Add a note...",
-              filled: true,
-              fillColor: Colors.black26,
-              border: OutlineInputBorder(
-                borderRadius: .circular(12),
-                borderSide: .none,
-              ),
-            ),
-          ),
+          noteTextField,
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: .spaceBetween,
-            children: [
-              const Text(
-                "Breakdown",
-                style: TextStyle(color: Colors.grey, fontWeight: .bold),
-              ),
-              TextButton.icon(
-                onPressed: () async {
-                  final newItem = await showAddBreakdownDialog(context);
-                  if (newItem != null) {
-                    setState(() => _currentBreakdown.add(newItem));
-                  }
-                },
-                icon: const Icon(Icons.add, size: 16, color: Colors.tealAccent),
-                label: const Text(
-                  "Add Item",
-                  style: TextStyle(color: Colors.tealAccent),
-                ),
-              ),
-            ],
-          ),
+          breakDownHeaderRow,
+          const SizedBox(height: 8),
           ..._currentBreakdown.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
@@ -212,49 +259,7 @@ class _EditSheetState extends State<EditSheet> {
             );
           }),
           const SizedBox(height: 24),
-          Row(
-            children: [
-              if (widget.entry != null && widget.entry!.amount != 0.0) ...[
-                Expanded(
-                  flex: 1,
-                  child: Padding(
-                    padding: const .only(right: 12.0),
-                    child: OutlinedButton(
-                      onPressed: _clearData,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.redAccent,
-                        side: const BorderSide(color: Colors.redAccent),
-                        padding: const .symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: .circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        "Reset",
-                        style: TextStyle(fontSize: 16, fontWeight: .bold),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: _saveData,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.tealAccent.shade700,
-                    foregroundColor: Colors.black,
-                    padding: const .symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-                  ),
-                  child: const Text(
-                    "Save Entry",
-                    style: TextStyle(fontSize: 16, fontWeight: .bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          entryControlsRow,
         ],
       ),
     );
