@@ -31,6 +31,9 @@ class DashboardHeader extends StatelessWidget {
 
     return Hero(
       tag: 'lifetime_pnl_card',
+      placeholderBuilder: (context, heroSize, child) {
+        return Opacity(opacity: 0.0, child: child);
+      },
       child: Material(
         type: .transparency,
         child: Container(
@@ -39,8 +42,8 @@ class DashboardHeader extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF1E1E1E), Color(0xFF2A2A2A)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: .topLeft,
+              end: .bottomRight,
             ),
             borderRadius: .circular(24),
             border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),

@@ -39,3 +39,5 @@ Pending features below are yet to be implemented. As soon as they are implemente
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
 | **Customizable Themes** | The app uses a Material 3 design scheme to easily change theme schemes on the go. | 🟥 Progess => 10% |
+| **PnL Tools** | Tools such as a CSV Data importer and exporter, for all your saved data. | 🟥 Progress => 0% |
+| **Settings** | Additional settings for the app. | 🟥 Progress => 0% |

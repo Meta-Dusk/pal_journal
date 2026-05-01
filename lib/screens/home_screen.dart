@@ -34,7 +34,73 @@ class _HomeScreenState extends State<HomeScreen> {
     final sign = isPositive ? "+" : "-";
     final accentColor = isPositive ? Colors.tealAccent : Colors.redAccent;
 
-    final gestureDetector = GestureDetector(
+    final lifetimeNetPnlView = SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: .start,
+        mainAxisSize: .min,
+        children: [
+          const Text(
+            "Lifetime Net PnL",
+            style: TextStyle(color: Colors.grey, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "$sign ₱$displayAmount",
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: .bold,
+              color: accentColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Text(
+                "Tap for detailed analytics",
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              const Spacer(),
+              Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final hero = Hero(
+      tag: 'lifetime_pnl_card',
+      // Material is required inside Hero to prevent text rendering glitches
+      placeholderBuilder: (context, heroSize, child) {
+        return Opacity(opacity: 0.0, child: child);
+      },
+      child: Material(
+        type: .transparency,
+        child: Container(
+          width: double.infinity,
+          padding: const .all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [const Color(0xFF1E1E1E), const Color(0xFF2A2A2A)],
+              begin: .topLeft,
+              end: .bottomRight,
+            ),
+            borderRadius: .circular(24),
+            border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: lifetimeNetPnlView,
+        ),
+      ),
+    );
+
+    final heroTransitionHandler = GestureDetector(
       onTap: () async {
         // Navigate to the Dashboard
         await Navigator.push(
@@ -49,73 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
         // Refresh data when we come back, just in case
         _loadLifetimeData();
       },
-      child: Hero(
-        tag: 'lifetime_pnl_card',
-        // Material is required inside Hero to prevent text rendering glitches
-        child: Material(
-          type: .transparency,
-          child: Container(
-            width: double.infinity,
-            padding: const .all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [const Color(0xFF1E1E1E), const Color(0xFF2A2A2A)],
-                begin: .topLeft,
-                end: .bottomRight,
-              ),
-              borderRadius: .circular(24),
-              border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: .start,
-                mainAxisSize: .min,
-                children: [
-                  const Text(
-                    "Lifetime Net PnL",
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "$sign ₱$displayAmount",
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: .bold,
-                      color: accentColor,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Text(
-                        "Tap for detailed analytics",
-                        style: TextStyle(color: Colors.white54, fontSize: 12),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: accentColor,
-                        size: 14,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      child: hero,
     );
 
-    return SingleChildScrollView(
+    final homeScreenView = SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Padding(
         padding: const .all(24.0),
@@ -133,10 +136,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 24),
 
             // The Hero Widget connects this card to the Dashboard
-            gestureDetector,
+            heroTransitionHandler,
           ],
         ),
       ),
     );
+    return homeScreenView;
   }
 }
