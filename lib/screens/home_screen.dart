@@ -29,10 +29,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final isPositive = _lifetimePnL >= 0;
     final displayAmount = AppFormatters.toCurrency(_lifetimePnL.abs());
     final sign = isPositive ? "+" : "-";
-    final accentColor = isPositive ? Colors.tealAccent : Colors.redAccent;
+    final accentColor = isPositive ? colors.primary : colors.error;
 
     final lifetimeNetPnlView = SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
@@ -40,9 +41,9 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: .start,
         mainAxisSize: .min,
         children: [
-          const Text(
+          Text(
             "Lifetime Net PnL",
-            style: TextStyle(color: Colors.grey, fontSize: 14),
+            style: TextStyle(color: colors.secondary, fontSize: 14),
           ),
           const SizedBox(height: 8),
           Text(
@@ -56,9 +57,9 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Text(
+              Text(
                 "Tap for detailed analytics",
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(color: colors.secondary, fontSize: 12),
               ),
               const Spacer(),
               Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
@@ -81,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const .all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [const Color(0xFF1E1E1E), const Color(0xFF2A2A2A)],
+              colors: [colors.surfaceContainer, colors.surfaceContainerHigh],
               begin: .topLeft,
               end: .bottomRight,
             ),
@@ -127,11 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Text(
               "Overview",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: .bold,
-                color: Colors.white,
-              ),
+              style: TextStyle(fontSize: 28, fontWeight: .bold),
             ),
             const SizedBox(height: 24),
 

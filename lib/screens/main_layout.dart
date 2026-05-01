@@ -35,6 +35,8 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final navBarItems = const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
       BottomNavigationBarItem(
@@ -48,7 +50,6 @@ class _MainLayoutState extends State<MainLayout> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
       body: SafeArea(
         child: PageView(
           controller: _pageController,
@@ -63,9 +64,9 @@ class _MainLayoutState extends State<MainLayout> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF1E1E1E),
-        selectedItemColor: Colors.tealAccent,
-        unselectedItemColor: Colors.grey,
+        backgroundColor: colors.surfaceContainer,
+        selectedItemColor: colors.primary,
+        unselectedItemColor: colors.onSurfaceVariant,
         currentIndex: _currentIndex,
         onTap: (index) {
           // Updates the state and animates the page simultaneously

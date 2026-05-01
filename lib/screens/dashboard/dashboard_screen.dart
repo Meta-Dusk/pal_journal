@@ -58,15 +58,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: const Color(0xFF121212),
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(color: Colors.tealAccent),
-        ),
+        appBar: AppBar(elevation: 0),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -79,7 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       const Text(
         "7-Day Trend",
-        style: TextStyle(fontSize: 20, fontWeight: .bold, color: Colors.white),
+        style: TextStyle(fontSize: 20, fontWeight: .bold),
       ),
       const SizedBox(height: 16),
       WeeklyTrendChart(recentEntries: _recentEntries),
@@ -87,7 +80,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       const Text(
         "Breakdown",
-        style: TextStyle(fontSize: 20, fontWeight: .bold, color: Colors.white),
+        style: TextStyle(fontSize: 20, fontWeight: .bold),
       ),
       const SizedBox(height: 16),
       CategoryBreakdownChart(recentEntries: _recentEntries),
@@ -95,12 +88,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text("Analytics", style: TextStyle(color: Colors.white)),
+        title: const Text("Analytics"),
         centerTitle: true,
       ),
       body: SingleChildScrollView(

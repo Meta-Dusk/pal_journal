@@ -28,19 +28,21 @@ class WeeklyTrendChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     if (recentEntries.isEmpty) {
       return Container(
         height: 250,
         width: double.infinity,
         padding: const .all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: colors.surfaceContainer,
           borderRadius: .circular(20),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             "Not enough data for this week",
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: colors.onSurfaceVariant),
           ),
         ),
       );
@@ -55,7 +57,7 @@ class WeeklyTrendChart extends StatelessWidget {
             padding: const .only(top: 8.0),
             child: Text(
               DateFormat('EEE').format(date),
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(color: colors.secondary, fontSize: 12),
             ),
           );
         }
@@ -68,7 +70,7 @@ class WeeklyTrendChart extends StatelessWidget {
       width: double.infinity,
       padding: const .all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: colors.surfaceContainer,
         borderRadius: .circular(20),
       ),
       child: BarChart(
@@ -100,7 +102,7 @@ class WeeklyTrendChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: data.amount,
-                  color: isProfit ? Colors.tealAccent : Colors.redAccent,
+                  color: isProfit ? Colors.greenAccent : colors.error,
                   width: 16,
                   borderRadius: .circular(4),
                 ),

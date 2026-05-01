@@ -1,50 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/services/csv_service.dart';
 import 'package:pal_journal/main.dart';
+import 'package:pal_journal/services/theme_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: const Text(
-          "Global Settings",
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: const Color(0xFF1E1E1E),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text("Global Settings"),
+        iconTheme: const IconThemeData(),
         elevation: 0,
       ),
       body: ListView(
         padding: const .all(16.0),
         children: [
           const Text(
+            "Appearance",
+            style: TextStyle(fontWeight: .bold, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          const ListTileThemeColor(),
+          const SizedBox(height: 32),
+          const Text(
             "Data Management",
-            style: TextStyle(
-              color: Colors.tealAccent,
-              fontWeight: .bold,
-              fontSize: 14,
-            ),
+            style: TextStyle(fontWeight: .bold, fontSize: 14),
           ),
           const SizedBox(height: 8),
           ListTileGlobalExport(),
           const SizedBox(height: 12),
           ListTileGlobalImport(),
           const SizedBox(height: 32),
-          const Divider(color: Colors.white24),
+          const Divider(),
           const SizedBox(height: 16),
-
-          // --- THE DANGER ZONE ---
-          const Text(
+          Text(
             "Danger Zone",
             style: TextStyle(
-              color: Colors.redAccent,
               fontWeight: .bold,
               fontSize: 14,
+              color: colors.error,
             ),
           ),
           const SizedBox(height: 8),
@@ -64,29 +64,28 @@ class ListTileGlobalClear extends StatelessWidget {
       "will be permanently deleted.\n\nAre you absolutely sure?";
 
   void _clearData(BuildContext context) async {
+    final colors = Theme.of(context).colorScheme;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          title: const Text(
+          title: Text(
             "WIPE ALL DATA?",
-            style: TextStyle(color: Colors.redAccent, fontWeight: .bold),
+            style: TextStyle(fontWeight: .bold, color: colors.error),
+            textAlign: .center,
           ),
-          content: const Text(
-            warningText,
-            style: TextStyle(color: Colors.white70),
-          ),
+          content: const Text(warningText),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text(
+              child: Text(
                 "DELETE EVERYTHING",
-                style: TextStyle(color: Colors.redAccent, fontWeight: .bold),
+                style: TextStyle(fontWeight: .bold, color: colors.error),
               ),
             ),
           ],
@@ -105,9 +104,13 @@ class ListTileGlobalClear extends StatelessWidget {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("All data has been permanently deleted."),
-          backgroundColor: Colors.redAccent,
+        SnackBar(
+          content: Text(
+            "All data has been permanently deleted.",
+            style: TextStyle(color: colors.onError),
+            textAlign: .center,
+          ),
+          backgroundColor: colors.error,
         ),
       );
 
@@ -119,17 +122,19 @@ class ListTileGlobalClear extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
-      tileColor: const Color(0xFF1E1E1E),
+      tileColor: colors.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-      leading: const Icon(Icons.delete_forever, color: Colors.redAccent),
-      title: const Text(
+      leading: Icon(Icons.delete_forever, color: colors.error),
+      title: Text(
         "Wipe All Data",
-        style: TextStyle(color: Colors.redAccent, fontWeight: .bold),
+        style: TextStyle(fontWeight: .bold, color: colors.error),
       ),
       subtitle: const Text(
         "Permanently erase your entire journal",
-        style: TextStyle(color: Colors.grey, fontSize: 12),
+        style: TextStyle(fontSize: 12),
       ),
       onTap: () async => _clearData(context),
     );
@@ -137,6 +142,7 @@ class ListTileGlobalClear extends StatelessWidget {
 }
 
 void _globalImportCsv(BuildContext context) async {
+  final colors = Theme.of(context).colorScheme;
   const warningText =
       "You are about to import data across ALL months.\n\n"
       "Any existing entries on the dates contained in the CSV will "
@@ -147,28 +153,22 @@ void _globalImportCsv(BuildContext context) async {
     context: context,
     builder: (context) {
       return AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text(
+        title: Text(
           "GLOBAL IMPORT WARNING",
-          style: TextStyle(
-            color: Colors.redAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: .bold, color: colors.error),
+          textAlign: .center,
         ),
-        content: const Text(
-          warningText,
-          style: TextStyle(color: Colors.white70),
-        ),
+        content: const Text(warningText),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
+            child: Text(
               "I Understand, Import",
-              style: TextStyle(color: Colors.redAccent),
+              style: TextStyle(color: colors.error),
             ),
           ),
         ],
@@ -186,9 +186,7 @@ void _globalImportCsv(BuildContext context) async {
     SnackBar(
       content: Text(
         success ? "Global restore complete!" : "Import failed or canceled.",
-        style: TextStyle(color: Colors.white),
       ),
-      backgroundColor: success ? Colors.teal : Colors.redAccent,
     ),
   );
 }
@@ -198,17 +196,16 @@ class ListTileGlobalImport extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
-      tileColor: const Color(0xFF1E1E1E),
+      tileColor: colors.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-      leading: const Icon(Icons.restore, color: Colors.purpleAccent),
-      title: const Text(
-        "Restore Data (CSV)",
-        style: TextStyle(color: Colors.white),
-      ),
+      leading: Icon(Icons.restore, color: colors.primary),
+      title: const Text("Restore Data (CSV)"),
       subtitle: const Text(
         "Import a complete backup file",
-        style: TextStyle(color: Colors.grey, fontSize: 12),
+        style: TextStyle(fontSize: 12),
       ),
       onTap: () async => _globalImportCsv(context),
     );
@@ -220,20 +217,92 @@ class ListTileGlobalExport extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
-      tileColor: const Color(0xFF1E1E1E),
+      tileColor: colors.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-      leading: const Icon(Icons.backup, color: Colors.blueAccent),
-      title: const Text(
-        "Backup All Data (CSV)",
-        style: TextStyle(color: Colors.white),
-      ),
+      leading: Icon(Icons.backup, color: colors.primary),
+      title: const Text("Backup All Data (CSV)"),
       subtitle: const Text(
         "Export your entire journal history",
-        style: TextStyle(color: Colors.grey, fontSize: 12),
+        style: TextStyle(fontSize: 12),
       ),
       onTap: () async {
         await CsvService.exportAll();
+      },
+    );
+  }
+}
+
+class ListTileThemeColor extends StatelessWidget {
+  const ListTileThemeColor({super.key});
+
+  void _showDialog(BuildContext context, Color currentColor) {
+    // Temporary variable to hold the color while they drag the wheel
+    Color pickerColor = currentColor;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pick a theme color'),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: pickerColor,
+            onColorChanged: (Color color) {
+              pickerColor = color;
+            },
+            pickerAreaHeightPercent: 0.8,
+            enableAlpha: false, // Only solid colors for theme seed
+            displayThumbColor: true,
+            paletteType: .hsvWithHue,
+            labelTypes: const [], // Hides hex codes for cleaner UI
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+            child: Text('Apply'),
+            onPressed: () {
+              ThemeService.updateSeedColor(pickerColor);
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ValueListenableBuilder<Color>(
+      valueListenable: ThemeService.seedColorNotifier,
+      builder: (context, currentColor, child) {
+        return ListTile(
+          tileColor: colors.surfaceContainer,
+          shape: RoundedRectangleBorder(borderRadius: .circular(12)),
+          leading: Icon(Icons.palette, color: colors.primary),
+          title: Text("App Theme Color"),
+          subtitle: Text(
+            "Choose your custom accent color",
+            style: TextStyle(fontSize: 12),
+          ),
+          trailing: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: currentColor,
+              shape: .circle,
+              border: .all(width: 1),
+            ),
+          ),
+          onTap: () => _showDialog(context, currentColor),
+        );
       },
     );
   }

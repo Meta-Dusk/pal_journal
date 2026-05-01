@@ -59,7 +59,6 @@ class _PnLCalendarState extends State<PnLCalendar> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
       shape: const RoundedRectangleBorder(
         borderRadius: .vertical(top: .circular(20)),
       ),
@@ -81,7 +80,6 @@ class _PnLCalendarState extends State<PnLCalendar> {
     final bool? didDataChange = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E1E),
       shape: const RoundedRectangleBorder(
         borderRadius: .vertical(top: .circular(20)),
       ),
@@ -107,6 +105,8 @@ class _PnLCalendarState extends State<PnLCalendar> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return TableCalendar(
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2030, 12, 31),
@@ -135,35 +135,35 @@ class _PnLCalendarState extends State<PnLCalendar> {
         });
       },
 
-      headerStyle: const HeaderStyle(
+      headerStyle: HeaderStyle(
         formatButtonVisible: false,
         titleCentered: false,
-        leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
-        rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18),
+        leftChevronIcon: Icon(Icons.chevron_left, color: colors.onSurface),
+        rightChevronIcon: Icon(Icons.chevron_right, color: colors.onSurface),
+        titleTextStyle: TextStyle(fontSize: 18, color: colors.onSurface),
       ),
-      daysOfWeekStyle: const DaysOfWeekStyle(
-        weekdayStyle: TextStyle(color: Colors.grey),
-        weekendStyle: TextStyle(color: Colors.grey),
+      daysOfWeekStyle: DaysOfWeekStyle(
+        weekdayStyle: TextStyle(color: colors.onSurfaceVariant),
+        weekendStyle: TextStyle(color: colors.onSurfaceVariant),
       ),
       calendarBuilders: CalendarBuilders(
         headerTitleBuilder: (context, day) {
           final monthText = DateFormat('yMMMM').format(day);
           return Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: .min,
             children: [
               Text(
                 monthText,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colors.onSurface,
                   fontSize: 18,
                   fontWeight: .bold,
                 ),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.settings_outlined,
-                  color: Colors.grey,
+                  color: colors.onSurfaceVariant,
                   size: 20,
                 ),
                 onPressed: _openMonthSettings,
@@ -184,7 +184,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
         outsideBuilder: (context, day, focusedDay) => Center(
           child: Text(
             '${day.day}',
-            style: const TextStyle(color: Colors.white24),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.3)),
           ),
         ),
       ),

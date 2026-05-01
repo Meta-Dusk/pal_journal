@@ -57,16 +57,12 @@ class ListTileSetGoal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
-      leading: const Icon(Icons.flag, color: Colors.tealAccent),
-      title: const Text(
-        "Set Monthly Goal",
-        style: TextStyle(color: Colors.white),
-      ),
-      subtitle: const Text(
-        "Coming soon...",
-        style: TextStyle(color: Colors.grey, fontSize: 12),
-      ),
+      leading: Icon(Icons.flag, color: colors.secondary),
+      title: const Text("Set Monthly Goal"),
+      subtitle: const Text("Coming soon...", style: TextStyle(fontSize: 12)),
       onTap: () {}, // Do nothing for now
     );
   }
@@ -79,12 +75,14 @@ class ListTileExportCSV extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
-      leading: const Icon(Icons.file_download, color: Colors.blueAccent),
-      title: const Text("Export to CSV", style: TextStyle(color: Colors.white)),
+      leading: Icon(Icons.file_download, color: colors.secondary),
+      title: const Text("Export to CSV"),
       subtitle: const Text(
         "Save this month's data as a spreadsheet",
-        style: TextStyle(color: Colors.grey, fontSize: 12),
+        style: TextStyle(fontSize: 12),
       ),
       onTap: () async {
         Navigator.pop(context); // Close the bottom sheet
@@ -105,30 +103,22 @@ class ListTileImportCSV extends StatelessWidget {
       "the existing entry will be OVERWRITTEN.\n\nDo you want to continue?";
 
   void _importCsvData(BuildContext context) async {
+    final colors = Theme.of(context).colorScheme;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          title: const Text(
-            "Import Data?",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: const Text(
-            warningText,
-            style: TextStyle(color: Colors.white70),
-          ),
+          title: const Text("Import Data?", textAlign: .center),
+          content: const Text(warningText),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                "Import",
-                style: TextStyle(color: Colors.purpleAccent),
-              ),
+              child: Text("Import", style: TextStyle(color: colors.tertiary)),
             ),
           ],
         );
@@ -145,11 +135,7 @@ class ListTileImportCSV extends StatelessWidget {
       Navigator.pop(context, true); // Close bottom sheet & refresh
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            "Data imported successfully!",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.teal,
+          content: Text("Data imported successfully!"),
           duration: Duration(seconds: 2),
         ),
       );
@@ -160,15 +146,14 @@ class ListTileImportCSV extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
-      leading: const Icon(Icons.download, color: Colors.purpleAccent),
-      title: const Text(
-        "Import from CSV",
-        style: TextStyle(color: Colors.white),
-      ),
+      leading: Icon(Icons.download, color: colors.tertiary),
+      title: const Text("Import from CSV"),
       subtitle: const Text(
         "Merge spreadsheet data into this month",
-        style: TextStyle(color: Colors.grey, fontSize: 12),
+        style: TextStyle(fontSize: 12),
       ),
       onTap: () async => _importCsvData(context),
     );
@@ -186,6 +171,8 @@ class ListTileClearData extends StatelessWidget {
   });
 
   void _clearData(BuildContext context) async {
+    final colors = Theme.of(context).colorScheme;
+
     final confirm = await confirmationDialog(context, monthName);
     if (confirm == true) {
       await _deleteMonthData(month);
@@ -194,8 +181,11 @@ class ListTileClearData extends StatelessWidget {
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("$monthName data cleared."),
-          backgroundColor: Colors.redAccent,
+          content: Text(
+            "$monthName data cleared.",
+            style: TextStyle(color: colors.onError),
+          ),
+          backgroundColor: colors.error,
         ),
       );
     }
@@ -203,15 +193,17 @@ class ListTileClearData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
-      leading: const Icon(Icons.delete_forever, color: Colors.redAccent),
-      title: const Text(
+      leading: Icon(Icons.delete_forever, color: colors.error),
+      title: Text(
         "Reset Month Data",
-        style: TextStyle(color: Colors.redAccent, fontWeight: .bold),
+        style: TextStyle(color: colors.error, fontWeight: .bold),
       ),
       subtitle: const Text(
         "Delete all entries for this month",
-        style: TextStyle(color: Colors.grey, fontSize: 12),
+        style: TextStyle(fontSize: 12),
       ),
       onTap: () async => _clearData(context),
     );
@@ -250,25 +242,27 @@ class ListTileClearData extends StatelessWidget {
 }
 
 Future<bool?> confirmationDialog(BuildContext context, String monthName) {
+  final colors = Theme.of(context).colorScheme;
+
   return showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      backgroundColor: const Color(0xFF1E1E1E),
-      title: const Text("Are you sure?", style: TextStyle(color: Colors.white)),
+      title: Text(
+        "Are you sure?",
+        textAlign: .center,
+        style: TextStyle(color: colors.error),
+      ),
       content: Text(
         "This will permanently delete all logged data for $monthName.",
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          child: const Text("Cancel"),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text(
-            "Delete All",
-            style: TextStyle(color: Colors.redAccent),
-          ),
+          child: Text("Delete All", style: TextStyle(color: colors.error)),
         ),
       ],
     ),

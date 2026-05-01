@@ -18,6 +18,8 @@ class CustomDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final pnl = entry?.amount ?? 0.0;
     final isPositive = pnl >= 0;
     final hasDetails =
@@ -33,16 +35,16 @@ class CustomDayCell extends StatelessWidget {
       pnlString = "${isPositive ? '+' : ''}${compactFormat.format(pnl.abs())}";
     }
     final pnlColor = pnl == 0.0
-        ? Colors.tealAccent.shade700
-        : (isPositive ? Colors.greenAccent : Colors.redAccent);
+        ? colors.onSurfaceVariant
+        : (isPositive ? Colors.greenAccent : colors.error);
 
     return Container(
       margin: const .all(4.0),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.grey.shade800 : null,
+        color: isSelected ? colors.primaryContainer : null,
         borderRadius: .circular(8.0),
         border: isToday && !isSelected
-            ? Border.all(color: Colors.grey.shade600, width: 1)
+            ? Border.all(color: colors.primary, width: 1)
             : null,
       ),
       child: Column(
@@ -50,8 +52,8 @@ class CustomDayCell extends StatelessWidget {
         children: [
           Text(
             '${day.day}',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: isSelected ? colors.onPrimaryContainer : colors.onSurface,
               fontWeight: .bold,
               fontSize: 16,
             ),
@@ -78,7 +80,7 @@ class CustomDayCell extends StatelessWidget {
                 ),
                 if (hasDetails) ...[
                   const SizedBox(width: 4),
-                  const Icon(Icons.circle, size: 4, color: Colors.grey),
+                  Icon(Icons.circle, size: 4, color: colors.primary),
                 ],
               ],
             ),

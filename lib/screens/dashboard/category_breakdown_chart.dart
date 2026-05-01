@@ -6,16 +6,6 @@ import 'package:pal_journal/utils/formatters.dart';
 class CategoryBreakdownChart extends StatelessWidget {
   final List<PnLEntry> recentEntries;
 
-  static const List<Color> _chartColors = [
-    Colors.tealAccent,
-    Colors.blueAccent,
-    Colors.purpleAccent,
-    Colors.orangeAccent,
-    Colors.pinkAccent,
-    Colors.amberAccent,
-    Colors.cyanAccent,
-  ];
-
   const CategoryBreakdownChart({super.key, required this.recentEntries});
 
   Map<String, double> _getCategoryBreakdown() {
@@ -46,20 +36,30 @@ class CategoryBreakdownChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final breakdownData = _getCategoryBreakdown();
+
+    final List<Color> dynamicChartColors = [
+      colors.primary,
+      colors.secondary,
+      colors.tertiary,
+      colors.primaryContainer,
+      colors.secondaryContainer,
+      colors.tertiaryContainer,
+    ];
 
     if (breakdownData.isEmpty) {
       return Container(
         height: 200,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: colors.surfaceContainer,
           borderRadius: .circular(20),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             "No breakdown data available",
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: colors.onSurfaceVariant),
           ),
         ),
       );
@@ -77,7 +77,8 @@ class CategoryBreakdownChart extends StatelessWidget {
             ) {
               final index = mapEntry.key;
               final amount = mapEntry.value.value;
-              final color = _chartColors[index % _chartColors.length];
+              final color =
+                  dynamicChartColors[index % dynamicChartColors.length];
 
               return PieChartSectionData(
                 color: color,
@@ -94,7 +95,7 @@ class CategoryBreakdownChart extends StatelessWidget {
         final index = mapEntry.key;
         final category = mapEntry.value.key;
         final amount = mapEntry.value.value;
-        final color = _chartColors[index % _chartColors.length];
+        final color = dynamicChartColors[index % dynamicChartColors.length];
 
         return Padding(
           padding: const .only(bottom: 12.0),
@@ -109,12 +110,12 @@ class CategoryBreakdownChart extends StatelessWidget {
               Expanded(
                 child: Text(
                   category,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: TextStyle(color: colors.onSurface, fontSize: 14),
                 ),
               ),
               Text(
                 "₱${AppFormatters.toCurrency(amount)}",
-                style: const TextStyle(color: Colors.white, fontWeight: .bold),
+                style: TextStyle(color: colors.onSurface, fontWeight: .bold),
               ),
             ],
           ),
@@ -125,7 +126,7 @@ class CategoryBreakdownChart extends StatelessWidget {
     return Container(
       padding: const .all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: colors.surfaceContainer,
         borderRadius: .circular(20),
       ),
       child: Column(children: breakDownContent),

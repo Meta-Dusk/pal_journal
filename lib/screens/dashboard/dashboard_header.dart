@@ -13,14 +13,16 @@ class DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final displayAmount = AppFormatters.toCurrency(totalAmount.abs());
     final sign = isPositive ? "+" : "-";
-    final accentColor = isPositive ? Colors.tealAccent : Colors.redAccent;
+    final accentColor = isPositive ? Colors.greenAccent : colors.error;
 
     final headerContent = [
-      const Text(
+      Text(
         "Lifetime Net PnL",
-        style: TextStyle(color: Colors.grey, fontSize: 14),
+        style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
       ),
       const SizedBox(height: 8),
       Text(
@@ -40,8 +42,11 @@ class DashboardHeader extends StatelessWidget {
           width: double.infinity,
           padding: const .all(24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF1E1E1E), Color(0xFF2A2A2A)],
+            gradient: LinearGradient(
+              colors: [
+                colors.surfaceContainerHighest,
+                colors.surfaceContainerHighest.withValues(alpha: 0.7),
+              ],
               begin: .topLeft,
               end: .bottomRight,
             ),

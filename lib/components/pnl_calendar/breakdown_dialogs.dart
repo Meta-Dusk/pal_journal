@@ -101,11 +101,12 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final dialogContent = [
       TextField(
         controller: _categoryController,
         autofocus: true,
-        style: const TextStyle(color: Colors.white),
         decoration: const InputDecoration(
           hintText: "Category (e.g. Allowance)",
         ),
@@ -113,8 +114,8 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
       const SizedBox(height: 16),
 
       _isLoadingTags
-          ? const CircularProgressIndicator(color: Colors.tealAccent)
-          : _buildTagsWrap(),
+          ? CircularProgressIndicator(color: colors.primary)
+          : _buildTagsWrap(colors),
 
       const SizedBox(height: 16),
       TextField(
@@ -127,11 +128,7 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
     ];
 
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E1E1E),
-      title: Text(
-        widget.contextText,
-        style: const TextStyle(color: Colors.white),
-      ),
+      title: Text(widget.contextText),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -144,18 +141,18 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
         DialogCancelButton(),
         TextButton(
           onPressed: _saveAndPop,
-          child: const Text("Save", style: TextStyle(color: Colors.tealAccent)),
+          child: Text("Save", style: TextStyle(color: colors.primary)),
         ),
       ],
     );
   }
 
-  Widget _buildTagsWrap() {
+  Widget _buildTagsWrap(ColorScheme colors) {
     final chips = _currentTags.map((tag) {
       return ActionChip(
         label: Text(
           tag,
-          style: const TextStyle(fontSize: 12, color: Colors.white70),
+          style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
         ),
         backgroundColor: Colors.white10,
         side: .none,
@@ -171,18 +168,15 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
 
     chips.add(
       ActionChip(
-        label: const Row(
+        label: Row(
           mainAxisSize: .min,
           children: [
-            Icon(Icons.edit, size: 12, color: Colors.tealAccent),
+            Icon(Icons.edit, size: 12, color: colors.primary),
             SizedBox(width: 4),
-            Text(
-              "Edit",
-              style: TextStyle(fontSize: 12, color: Colors.tealAccent),
-            ),
+            Text("Edit", style: TextStyle(fontSize: 12, color: colors.primary)),
           ],
         ),
-        backgroundColor: Colors.tealAccent.withValues(alpha: 0.1),
+        backgroundColor: colors.primaryContainer.withValues(alpha: 0.1),
         side: .none,
         shape: RoundedRectangleBorder(borderRadius: .circular(8)),
         onPressed: () async {
@@ -236,18 +230,19 @@ class _TagEditorDialogState extends State<TagEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final dialogContent = [
       Row(
         children: [
           Expanded(
             child: TextField(
               controller: _newTagController,
-              style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(hintText: "New Tag Name"),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.tealAccent),
+            icon: Icon(Icons.add, color: colors.primary),
             onPressed: () {
               if (_newTagController.text.isNotEmpty) {
                 setState(() {
@@ -268,16 +263,9 @@ class _TagEditorDialogState extends State<TagEditorDialog> {
           itemBuilder: (context, index) {
             return ListTile(
               contentPadding: .zero,
-              title: Text(
-                _editableTags[index],
-                style: const TextStyle(color: Colors.white),
-              ),
+              title: Text(_editableTags[index]),
               trailing: IconButton(
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: Colors.redAccent,
-                  size: 20,
-                ),
+                icon: Icon(Icons.delete_outline, color: colors.error, size: 20),
                 onPressed: () {
                   setState(() {
                     _editableTags.removeAt(index);
@@ -292,7 +280,7 @@ class _TagEditorDialogState extends State<TagEditorDialog> {
 
     return AlertDialog(
       backgroundColor: const Color(0xFF1E1E1E),
-      title: const Text("Edit Tags", style: TextStyle(color: Colors.white)),
+      title: const Text("Edit Tags"),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(mainAxisSize: .min, children: dialogContent),
@@ -301,7 +289,7 @@ class _TagEditorDialogState extends State<TagEditorDialog> {
         DialogCancelButton(),
         TextButton(
           onPressed: _savePrefsAndPop,
-          child: const Text("Save", style: TextStyle(color: Colors.tealAccent)),
+          child: Text("Save", style: TextStyle(color: colors.primary)),
         ),
       ],
     );

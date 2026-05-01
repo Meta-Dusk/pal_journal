@@ -68,16 +68,18 @@ class _EditSheetState extends State<EditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     final amountTextField = TextField(
       controller: _amountController,
       keyboardType: const .numberWithOptions(decimal: true, signed: true),
       inputFormatters: [PnLFormatter()],
-      style: const TextStyle(fontSize: 24, color: Colors.white),
+      style: const TextStyle(fontSize: 24),
       decoration: InputDecoration(
         hintText: "0.00",
         prefixText: "₱ ",
         filled: true,
-        fillColor: Colors.black26,
+        fillColor: colors.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: .circular(12),
           borderSide: .none,
@@ -87,11 +89,10 @@ class _EditSheetState extends State<EditSheet> {
 
     final noteTextField = TextField(
       controller: _noteController,
-      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: "Add a note...",
         filled: true,
-        fillColor: Colors.black26,
+        fillColor: colors.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: .circular(12),
           borderSide: .none,
@@ -102,9 +103,9 @@ class _EditSheetState extends State<EditSheet> {
     final breakDownHeaderRow = Row(
       mainAxisAlignment: .spaceBetween,
       children: [
-        const Text(
+        Text(
           "Breakdown",
-          style: TextStyle(color: Colors.grey, fontWeight: .bold),
+          style: TextStyle(color: colors.onSurfaceVariant, fontWeight: .bold),
         ),
         TextButton.icon(
           onPressed: () async {
@@ -113,53 +114,8 @@ class _EditSheetState extends State<EditSheet> {
               setState(() => _currentBreakdown.add(newItem));
             }
           },
-          icon: const Icon(Icons.add, size: 16, color: Colors.tealAccent),
-          label: const Text(
-            "Add Item",
-            style: TextStyle(color: Colors.tealAccent),
-          ),
-        ),
-      ],
-    );
-
-    final entryControlsRow = Row(
-      children: [
-        if (widget.entry != null && widget.entry!.amount != 0.0) ...[
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const .only(right: 12.0),
-              child: OutlinedButton(
-                onPressed: _clearData,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.redAccent,
-                  side: const BorderSide(color: Colors.redAccent),
-                  padding: const .symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-                ),
-                child: const Text(
-                  "Reset",
-                  style: TextStyle(fontSize: 16, fontWeight: .bold),
-                ),
-              ),
-            ),
-          ),
-        ],
-        Expanded(
-          flex: 2,
-          child: ElevatedButton(
-            onPressed: _saveData,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.tealAccent.shade700,
-              foregroundColor: Colors.black,
-              padding: const .symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-            ),
-            child: const Text(
-              "Save Entry",
-              style: TextStyle(fontSize: 16, fontWeight: .bold),
-            ),
-          ),
+          icon: Icon(Icons.add, size: 16, color: colors.primary),
+          label: Text("Add Item", style: TextStyle(color: colors.primary)),
         ),
       ],
     );
@@ -177,11 +133,7 @@ class _EditSheetState extends State<EditSheet> {
         children: [
           Text(
             "Edit ${DateFormat('MMMM d').format(widget.day)}",
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: .bold,
-              color: Colors.white,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: .bold),
           ),
           const SizedBox(height: 16),
           amountTextField,
@@ -190,78 +142,121 @@ class _EditSheetState extends State<EditSheet> {
           const SizedBox(height: 16),
           breakDownHeaderRow,
           const SizedBox(height: 8),
-          ..._currentBreakdown.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-
-            return Dismissible(
-              key: UniqueKey(),
-              background: Container(
-                alignment: .centerLeft,
-                padding: const .only(left: 20),
-                margin: const .only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent.withValues(alpha: 0.8),
-                  borderRadius: .circular(8),
-                ),
-                child: const Icon(Icons.edit, color: Colors.white),
-              ),
-              secondaryBackground: Container(
-                alignment: .centerRight,
-                padding: const .only(right: 20),
-                margin: const .only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent.withValues(alpha: 0.8),
-                  borderRadius: .circular(8),
-                ),
-                child: const Icon(Icons.delete, color: Colors.white),
-              ),
-              confirmDismiss: (direction) async {
-                if (direction == .endToStart) {
-                  setState(() => _currentBreakdown.removeAt(index));
-                  return true;
-                } else if (direction == .startToEnd) {
-                  final editedItem = await showEditBreakdownDialog(
-                    context,
-                    item,
-                  );
-                  if (editedItem != null) {
-                    setState(() => _currentBreakdown[index] = editedItem);
-                  }
-                  return false;
-                }
-                return false;
-              },
-              child: Container(
-                margin: const .only(bottom: 8),
-                padding: const .all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: .circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: .spaceBetween,
-                  children: [
-                    Text(
-                      item.category ?? "",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: .bold,
-                      ),
-                    ),
-                    Text(
-                      "₱ ${AppFormatters.toCurrency(item.amount ?? 0.0)}",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
+          ...getDismissibles(_currentBreakdown, colors),
           const SizedBox(height: 24),
-          entryControlsRow,
+          getEntryControls(colors),
         ],
       ),
     );
+  }
+
+  Row getEntryControls(ColorScheme colors) {
+    final resetButton = OutlinedButton(
+      onPressed: _clearData,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: colors.error,
+        side: BorderSide(color: colors.error),
+        padding: const .symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: .circular(12)),
+      ),
+      child: const Text(
+        "Reset",
+        style: TextStyle(fontSize: 16, fontWeight: .bold),
+      ),
+    );
+
+    final saveButton = ElevatedButton(
+      onPressed: _saveData,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: colors.primaryContainer,
+        foregroundColor: colors.onPrimaryContainer,
+        padding: const .symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: .circular(12)),
+      ),
+      child: const Text(
+        "Save Entry",
+        style: TextStyle(fontSize: 16, fontWeight: .bold),
+      ),
+    );
+
+    return Row(
+      children: [
+        if (widget.entry != null && widget.entry!.amount != 0.0) ...[
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const .only(right: 12.0),
+              child: resetButton,
+            ),
+          ),
+        ],
+        Expanded(flex: 2, child: saveButton),
+      ],
+    );
+  }
+
+  Iterable<Dismissible> getDismissibles(
+    List<ExpenseItem> breakdownList,
+    ColorScheme colors,
+  ) {
+    return breakdownList.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+
+      return Dismissible(
+        key: UniqueKey(),
+        background: Container(
+          alignment: .centerLeft,
+          padding: const .only(left: 20),
+          margin: const .only(bottom: 8),
+          decoration: BoxDecoration(
+            color: colors.secondary,
+            borderRadius: .circular(8),
+          ),
+          child: Icon(Icons.edit, color: colors.onSecondary),
+        ),
+        secondaryBackground: Container(
+          alignment: .centerRight,
+          padding: const .only(right: 20),
+          margin: const .only(bottom: 8),
+          decoration: BoxDecoration(
+            color: colors.error,
+            borderRadius: .circular(8),
+          ),
+          child: Icon(Icons.delete, color: colors.onError),
+        ),
+        confirmDismiss: (direction) async {
+          if (direction == .endToStart) {
+            setState(() => _currentBreakdown.removeAt(index));
+            return true;
+          } else if (direction == .startToEnd) {
+            final editedItem = await showEditBreakdownDialog(context, item);
+            if (editedItem != null) {
+              setState(() => _currentBreakdown[index] = editedItem);
+            }
+            return false;
+          }
+          return false;
+        },
+        child: Container(
+          margin: const .only(bottom: 8),
+          padding: const .all(16),
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerHighest,
+            borderRadius: .circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: .spaceBetween,
+            children: [
+              Text(
+                item.category ?? "",
+                style: const TextStyle(fontWeight: .bold),
+              ),
+              Text("₱ ${AppFormatters.toCurrency(item.amount ?? 0.0)}"),
+            ],
+          ),
+        ),
+      );
+    });
   }
 }
