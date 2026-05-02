@@ -271,17 +271,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
       const SizedBox(height: 48),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: const Text("Analytics"),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const .symmetric(horizontal: 24.0),
-          child: Column(crossAxisAlignment: .start, children: mainContent),
+    // --- NEW TABBED LAYOUT ---
+    return DefaultTabController(
+      length: 2, // We have two tabs now!
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          title: const Text("Analytics"),
+          centerTitle: true,
+          // 1. Add the TabBar to the bottom of the AppBar
+          bottom: TabBar(
+            indicatorColor: colors.primary,
+            labelColor: colors.primary,
+            unselectedLabelColor: colors.onSurfaceVariant,
+            tabs: const [
+              Tab(text: "Overview", icon: Icon(Icons.dashboard)),
+              Tab(text: "Categories", icon: Icon(Icons.category)),
+            ],
+          ),
+        ),
+        // 2. Wrap your views in a TabBarView!
+        body: TabBarView(
+          children: [
+            // TAB 1: The original Overview content
+            SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const .symmetric(horizontal: 24.0, vertical: 16.0),
+                child: Column(
+                  crossAxisAlignment: .start,
+                  children: mainContent,
+                ),
+              ),
+            ),
+
+            // TAB 2: The new Granular Analytics tool
+            const Padding(
+              padding: .only(top: 16.0), // Give it a little breathing room
+              child: CategoryAnalyticsView(),
+            ),
+          ],
         ),
       ),
     );
