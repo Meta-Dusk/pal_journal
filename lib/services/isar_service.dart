@@ -3,20 +3,19 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 
 class IsarService {
+  static final IsarService _instance = IsarService._internal();
   late Future<Isar> db;
 
-  IsarService() {
+  factory IsarService() => _instance;
+
+  IsarService._internal() {
     db = openDB();
   }
 
   Future<Isar> openDB() async {
-    // Check if an instance is already open to avoid errors
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
-      return await Isar.open(
-        [PnLEntrySchema], // This comes from your generated file
-        directory: dir.path,
-      );
+      return await Isar.open([PnLEntrySchema], directory: dir.path);
     }
     return Future.value(Isar.getInstance());
   }
@@ -103,5 +102,20 @@ class IsarService {
     final entries = await isar.collection<PnLEntry>().where().findAll();
     // Fold is a quick way to sum up a list of objects in Dart
     return entries.fold(0.0, (sum, item) async => await sum + item.amount);
+  }
+
+  /// Wipes local data and replaces it with fresh Cloud data.
+  Future<void> replaceAllEntries(List<PnLEntry> cloudEntries) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.collection<PnLEntry>().clear();
+      await isar.collection<PnLEntry>().putAll(cloudEntries);
+    });
+  }
+
+  /// Fetches every entry in the local database for cloud backup.
+  Future<List<PnLEntry>> getAllEntries() async {
+    final isar = await db;
+    return await isar.collection<PnLEntry>().where().findAll();
   }
 }

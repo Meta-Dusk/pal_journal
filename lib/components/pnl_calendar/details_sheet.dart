@@ -23,7 +23,7 @@ class DetailsSheet extends StatelessWidget {
 
     final symbol = CurrencyService.symbol;
     final currency1 = AppFormatters.toCurrency(
-      CurrencyService.toDisplay(entry!.amount),
+      CurrencyService.toDisplay(entry?.amount ?? 0.0),
     );
     final noteEntry = [
       const SizedBox(height: 16),
@@ -37,7 +37,7 @@ class DetailsSheet extends StatelessWidget {
           children: [
             Icon(Icons.sticky_note_2, color: colors.onSurfaceVariant, size: 16),
             const SizedBox(width: 8),
-            Expanded(child: Text(entry!.note!)),
+            Expanded(child: Text(entry?.note ?? "")),
           ],
         ),
       ),
@@ -50,21 +50,22 @@ class DetailsSheet extends StatelessWidget {
         style: TextStyle(color: colors.onSurfaceVariant, fontWeight: .bold),
       ),
       const SizedBox(height: 8),
-      ...entry!.breakdown!.map((item) {
-        final currency2 = AppFormatters.toCurrency(
-          CurrencyService.toDisplay(item.amount ?? 0.0),
-        );
-        return Padding(
-          padding: const .symmetric(vertical: 4.0),
-          child: Row(
-            mainAxisAlignment: .spaceBetween,
-            children: [
-              Text(item.category ?? "Unknown"),
-              Text("$symbol $currency2"),
-            ],
-          ),
-        );
-      }),
+      if (entry != null)
+        ...entry!.breakdown!.map((item) {
+          final currency2 = AppFormatters.toCurrency(
+            CurrencyService.toDisplay(item.amount ?? 0.0),
+          );
+          return Padding(
+            padding: const .symmetric(vertical: 4.0),
+            child: Row(
+              mainAxisAlignment: .spaceBetween,
+              children: [
+                Text(item.category ?? "Unknown"),
+                Text("$symbol $currency2"),
+              ],
+            ),
+          );
+        }),
     ];
 
     final mainContent = [

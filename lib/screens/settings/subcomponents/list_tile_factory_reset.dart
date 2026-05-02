@@ -12,9 +12,6 @@ class ListTileFactoryReset extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return ListTile(
-      shape: const RoundedRectangleBorder(
-        borderRadius: .vertical(bottom: .circular(16)),
-      ),
       leading: Icon(Icons.delete_forever, color: colors.error),
       title: Text(
         "Factory Reset",
