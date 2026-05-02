@@ -110,10 +110,10 @@ class _AuthScreenState extends State<AuthScreen> {
       passwordField(colors),
       const SizedBox(height: 24),
 
+      // --- ACTIONS ---
+      actionsButton(colors),
+      const SizedBox(height: 24),
       if (kIsWeb || !Platform.isWindows) ...[
-        // --- ACTIONS ---
-        actionsButton(colors),
-        const SizedBox(height: 24),
         StyledSpacer(),
         const SizedBox(height: 24),
 

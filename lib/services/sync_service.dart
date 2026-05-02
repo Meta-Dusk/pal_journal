@@ -6,7 +6,7 @@ class SyncService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // --- BACKUP TO CLOUD ---
-  // Takes your entire Isar database and pushes it to Firestore
+  /// Takes the entire Isar database and pushes it to Firestore.
   static Future<String?> backupToCloud(List<PnLEntry> localEntries) async {
     try {
       final userId = AuthService.currentUserId;

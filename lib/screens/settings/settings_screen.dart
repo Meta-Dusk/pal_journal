@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/screens/settings/cloud_sync_card.dart';
 import './subcomponents/list_tiles.dart';
 import 'smart_auth_menu.dart';
 
@@ -68,7 +69,13 @@ class SettingsScreen extends StatelessWidget {
           border: .all(color: colors.onSurface.withValues(alpha: 0.3)),
           borderRadius: .circular(16),
         ),
-        child: Column(children: [const SmartAuthMenu()]),
+        child: Column(
+          children: [
+            const SmartAuthMenu(),
+            Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
+            const CloudSyncCard(),
+          ],
+        ),
       ),
     ];
 

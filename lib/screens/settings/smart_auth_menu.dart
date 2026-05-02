@@ -34,38 +34,14 @@ class LoggedInView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    final mainContent = [
-      ListTile(
-        leading: Icon(Icons.cloud_done, color: colors.primary),
-        title: Text(
-          "Syncing as",
-          style: TextStyle(color: colors.primary, fontSize: 12),
-        ),
-        subtitle: Text(
-          user?.email ?? "Unknown User",
-          style: const TextStyle(fontWeight: .bold, fontSize: 16),
-        ),
+    return ListTile(
+      leading: Icon(Icons.person_outline, color: colors.primary),
+      title: const Text("Account Settings"),
+      subtitle: Text(user?.email ?? "Signed In"),
+      trailing: TextButton(
+        onPressed: () => AuthService.signOut(),
+        child: Text("Log Out", style: TextStyle(color: colors.error)),
       ),
-      const Divider(height: 1),
-      ListTile(
-        leading: Icon(Icons.logout, color: colors.error, size: 20),
-        title: Text(
-          "Log Out",
-          style: TextStyle(color: colors.error, fontWeight: .bold),
-        ),
-        onTap: () async {
-          await AuthService.signOut();
-        },
-      ),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.primaryContainer.withValues(alpha: 0.1),
-        borderRadius: .circular(12),
-        border: .all(color: colors.primary.withValues(alpha: 0.3)),
-      ),
-      child: Column(children: mainContent),
     );
   }
 }
