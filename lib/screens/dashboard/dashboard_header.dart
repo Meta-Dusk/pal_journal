@@ -45,7 +45,7 @@ class _DashboardHeaderState extends State<DashboardHeader>
     final colors = Theme.of(context).colorScheme;
     final displayAmount = AppFormatters.toCurrency(widget.totalAmount.abs());
     final sign = widget.isPositive ? "+" : "-";
-    final accentColor = widget.isPositive ? Colors.greenAccent : colors.error;
+    final accentColor = widget.isPositive ? colors.primary : colors.error;
 
     return Hero(
       tag: 'lifetime_pnl_card',

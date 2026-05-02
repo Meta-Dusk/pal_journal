@@ -26,14 +26,15 @@ The plan for this app, is to be able to support both mobile (**Android**) and de
 
 | Feature | Description | Version |
 | ------- | ----------- | ------- |
-| **PnL Calendar** | A Profits and Losses Calendar, wherein you can visualize the amount of profits or losses you have incurred per day. | v0.1.0 |
-| **Isar Database** | Saved data are handled by _Isar_, making it fast and reliable to show updates with all of the data provided by the app. | v0.1.0 |
-| **Dashboard** | Another visual representation of all the profits and losses, but in different formats. | v0.1.0 |
-| **PnL Tools** | Tools such as a CSV Data importer and exporter, for all your saved data. | v0.2.0 |
-| **Settings** | Additional settings (global) for the app. | v0.2.0 |
-| **Customizable Themes** | The app uses a Material 3 design scheme to easily change theme schemes on the go. | v0.3.0 |
-| **Dashboard Settings** | Filters and other settings for the dashboard. | v0.4.0 |
-| **Monthly Goals** | You can set goals for certain conditions per month. | v0.5.0 |
+| **Algebraic PnL Calendar** | A visual ledger tracking daily Net Income (profits minus losses). <br><br> _Simply put: A calendar that shows exactly how much you made or spent each day at a glance._ | v0.1.0 |
+| **Local Edge Storage (Isar)** | Secure, lightning-fast database architecture for instantaneous read/write operations. _Simply put: Your data is saved instantly and securely right on your device, requiring no internet connection._ | v0.1.0 |
+| **Analytics Dashboard** | Comprehensive data visualization for trend analysis and cash-flow tracking. <br><br> _Simply put: Beautiful charts and summaries that break down where your money is going over time._ | v0.1.0 |
+| **Data Portability Tools** | CSV parsing capabilities for external spreadsheet reconciliation and data migration. <br><br> _Simply put: Easily back up your data to a spreadsheet, or load older data into the app._ | v0.2.0 |
+| **Global Settings** | Core application configurations and user preferences. | v0.2.0 |
+| **Dynamic Material 3 UI** | Modern, responsive interface with adaptive color theming and animated transitions. <br><br> _Simply put: The app looks beautiful, feels premium, and adjusts to your preferred visual style._ | v0.3.0 |
+| **Dashboard Query Filters** | Granular timeframe selectors and data-filtering mechanisms for the analytics engine. <br><br> _Simply put: Easily switch between viewing your stats for the week, the month, the year, or a custom date range._ | v0.4.0 |
+| **Smart Financial Targets** | Configurable monthly thresholds (Budgets and Profit Goals) with real-time progress tracking. <br><br> _Simply put: Set a limit on what you want to spend or a target for what you want to earn, and the app will track your progress._ | v0.5.0 |
+| **Zero-Based Reconciliation** | Advanced daily ledgers that automatically balance categorized transaction breakdowns into a unified daily net total. <br><br> _Simply put: You can log every detail of your day's income and expenses, and the app will automatically do the math to ensure everything balances perfectly._ | v0.6.0 |
 
 ## Setup / Installation
 
@@ -46,4 +47,6 @@ Pending features below are yet to be implemented. As soon as they are implemente
 
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
-| **Data Syncing** | Optional account creation for data syncing across all devices. | 🟥 Progress => 0% |
+| **Cloud Ledger Sync** | Cross-platform data synchronization via authenticated accounts. <br><br> _Simply put: Log in to automatically back up your data and seamlessly access it on both your phone and PC._ | 🟥 Progress => 0% |
+| **Granular Category Tracking** | Isolated trend analysis for specific cash flow streams. <br><br> _Simply put: Want to see exactly how much you spend on "Food" over the entire year? This will let you filter and track specific tags._ | 🟥 Progress => 0% |
+| **Real-Time Forex Conversion** | Automated currency localization for international tracking. <br><br> _Simply put: Traveling or getting paid in a different currency? The app will automatically convert it to your main currency._ | 🟥 Progress => 0% |

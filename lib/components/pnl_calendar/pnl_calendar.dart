@@ -30,25 +30,33 @@ class _PnLCalendarState extends State<PnLCalendar> {
     _loadPnLData();
   }
 
-  /// Smarter calculation that respects the current focused month and goal type
-  double _calculateMonthlyProgress() {
-    if (_currentMonthGoal == null) return 0.0;
-    double total = 0.0;
+  // --- THE NEW SPLIT MATH ENGINE ---
 
-    for (var entry in _dailyEntries.values) {
-      // FIX 1: Only check entries belonging to the currently viewed month!
-      if (entry.date.year == _focusedDay.year &&
-          entry.date.month == _focusedDay.month) {
-        if (_currentMonthGoal!.type == .budget && entry.amount < 0) {
-          // Budgets sum up losses (absolute value)
-          total += entry.amount.abs();
-        } else if (_currentMonthGoal!.type == .profit) {
-          // Profit goals sum up Net PnL (combining wins and losses)
-          total += entry.amount;
-        }
-      }
-    }
-    return total;
+  double get _monthlyExpenses {
+    return _dailyEntries.values
+        .where(
+          (e) =>
+              e.date.year == _focusedDay.year &&
+              e.date.month == _focusedDay.month &&
+              e.amount < 0,
+        )
+        .fold(0.0, (sum, e) => sum + e.amount.abs());
+  }
+
+  double get _monthlyIncome {
+    return _dailyEntries.values
+        .where(
+          (e) =>
+              e.date.year == _focusedDay.year &&
+              e.date.month == _focusedDay.month &&
+              e.amount > 0,
+        )
+        .fold(0.0, (sum, e) => sum + e.amount);
+  }
+
+  /// Profit naturally goes up and down via algebraic Net PnL!
+  double get _netProfit {
+    return _monthlyIncome - _monthlyExpenses; // True algebraic Net PnL
   }
 
   Future<void> _loadMonthGoal(DateTime month) async {
@@ -234,30 +242,44 @@ class _PnLCalendarState extends State<PnLCalendar> {
   Widget buildMonthlyGoalIndicator(ColorScheme colors) {
     if (_currentMonthGoal == null) return const SizedBox.shrink();
 
-    final target = _currentMonthGoal!.amount;
     final isBudget = _currentMonthGoal!.type == .budget;
 
-    // We get the specific calculated value based on the Goal Type
-    final currentValue = _calculateMonthlyProgress();
-
+    double target;
     double progress;
     bool isOverBudget = false;
     bool isGoalMet = false;
     Color barColor;
     String label;
+    String valueText;
+
+    // The "Unsynced Income" is the total income
+    // minus what has already been added to the budget
+    final unsyncedIncome = _monthlyIncome - _currentMonthGoal!.syncedOffset;
 
     if (isBudget) {
       label = "Monthly Budget";
+      // The target is visually increased by the synced offset!
+      target = _currentMonthGoal!.amount + _currentMonthGoal!.syncedOffset;
+      final currentValue = _monthlyExpenses;
+
       progress = target > 0 ? (currentValue / target).clamp(0.0, 1.0) : 0.0;
       isOverBudget = currentValue > target;
       barColor = isOverBudget ? colors.error : colors.primary;
+      valueText =
+          "₱${AppFormatters.toCurrency(currentValue)} "
+          "/ ₱${AppFormatters.toCurrency(target)}";
     } else {
       label = "Profit Target";
+      target = _currentMonthGoal!.amount;
+      final currentValue = _netProfit;
+
       progress = target > 0 ? (currentValue / target).clamp(0.0, 1.0) : 0.0;
-      // If currentValue is negative (they are at a net loss), progress is 0.
       if (currentValue < 0) progress = 0.0;
       isGoalMet = currentValue >= target;
       barColor = isGoalMet ? Colors.greenAccent : colors.primary;
+      valueText =
+          "₱${AppFormatters.toCurrency(currentValue)} "
+          "/ ₱${AppFormatters.toCurrency(target)}";
     }
 
     final mainContent = [
@@ -276,8 +298,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
             ],
           ),
           Text(
-            "₱${AppFormatters.toCurrency(currentValue)} "
-            "/ ₱${AppFormatters.toCurrency(target)}",
+            valueText,
             style: TextStyle(color: barColor, fontWeight: .bold, fontSize: 14),
           ),
         ],
@@ -292,17 +313,58 @@ class _PnLCalendarState extends State<PnLCalendar> {
           valueColor: AlwaysStoppedAnimation<Color>(barColor),
         ),
       ),
+
+      // --- DYNAMIC NOTIFICATIONS & SYNC BUTTON ---
       if (isOverBudget) ...[
         const SizedBox(height: 8),
         Text(
           "You have exceeded your monthly budget!",
           style: TextStyle(color: colors.error, fontSize: 12),
         ),
-      ] else if (isGoalMet) ...[
+      ] else if (isGoalMet && !isBudget) ...[
         const SizedBox(height: 8),
         Text(
           "You hit your profit target! Awesome!",
-          style: TextStyle(color: Colors.greenAccent, fontSize: 12),
+          style: TextStyle(color: colors.primary, fontSize: 12),
+        ),
+      ] else if (isBudget && unsyncedIncome > 0) ...[
+        // The Smart Sync Button!
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () async {
+            // Re-save the goal with the new offset (which perfectly equals total income)
+            await GoalService.setGoal(
+              _focusedDay,
+              _currentMonthGoal!.amount,
+              .budget,
+              syncedOffset: _monthlyIncome,
+            );
+            _loadMonthGoal(_focusedDay); // Refresh the UI instantly
+          },
+          child: Container(
+            padding: const .symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.1),
+              borderRadius: .circular(8),
+              border: .all(color: colors.primary.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: .min,
+              children: [
+                Icon(Icons.auto_awesome, color: colors.primary, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  "Earned +₱${AppFormatters.toCurrency(unsyncedIncome)}! "
+                  "Tap to add to budget.",
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontSize: 12,
+                    fontWeight: .bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     ];

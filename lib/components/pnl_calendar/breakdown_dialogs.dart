@@ -15,23 +15,30 @@ const List<String> _defaultTags = [
   'Leisure',
 ];
 
-Future<ExpenseItem?> showAddBreakdownDialog(BuildContext context) {
+Future<ExpenseItem?> showAddBreakdownDialog(
+  BuildContext context,
+  double unallocatedAmount,
+) {
   return showDialog<ExpenseItem>(
     context: context,
-    builder: (context) =>
-        const BreakdownDialogForm(contextText: "Add Breakdown"),
+    builder: (context) => BreakdownDialogForm(
+      contextText: "Add Breakdown",
+      unallocatedAmount: unallocatedAmount,
+    ),
   );
 }
 
 Future<ExpenseItem?> showEditBreakdownDialog(
   BuildContext context,
   ExpenseItem currentItem,
+  double unallocatedAmount,
 ) {
   return showDialog<ExpenseItem>(
     context: context,
     builder: (context) => BreakdownDialogForm(
       contextText: "Edit Breakdown",
       itemToEdit: currentItem,
+      unallocatedAmount: unallocatedAmount,
     ),
   );
 }
@@ -39,10 +46,12 @@ Future<ExpenseItem?> showEditBreakdownDialog(
 class BreakdownDialogForm extends StatefulWidget {
   final String contextText;
   final ExpenseItem? itemToEdit;
+  final double unallocatedAmount;
 
   const BreakdownDialogForm({
     super.key,
     required this.contextText,
+    required this.unallocatedAmount,
     this.itemToEdit,
   });
 
@@ -87,13 +96,29 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
     super.dispose();
   }
 
+  /// The Smart Save Logic
   void _saveAndPop() {
-    final value = AppFormatters.parseCurrency(_amountController.text);
-    if (_categoryController.text.isNotEmpty && value != 0.0) {
+    final textInput = _amountController.text.trim();
+    double value;
+
+    if (textInput.isEmpty) {
+      // RULE 1: Auto-fill with the exact mathematical difference!
+      value = widget.unallocatedAmount;
+    } else {
+      // RULE 2: Just parse it. No more strict blockers!
+      value = AppFormatters.parseCurrency(textInput);
+    }
+
+    // Fallback if they forget to pick a category
+    if (_categoryController.text.trim().isEmpty) {
+      _categoryController.text = "Uncategorized";
+    }
+
+    if (value != 0.0) {
       Navigator.pop(
         context,
         ExpenseItem()
-          ..category = _categoryController.text
+          ..category = _categoryController.text.trim()
           ..amount = value,
       );
     }
@@ -122,8 +147,13 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
         controller: _amountController,
         keyboardType: const .numberWithOptions(decimal: true, signed: true),
         inputFormatters: [PnLFormatter()],
-        style: const TextStyle(color: Colors.white),
-        decoration: const InputDecoration(hintText: "Amount", prefixText: "₱ "),
+        decoration: InputDecoration(
+          // Remind the user exactly how much space they have left
+          hintText:
+              "Remaining: ₱"
+              "${AppFormatters.toCurrency(widget.unallocatedAmount)}",
+          prefixText: "₱ ",
+        ),
       ),
     ];
 

@@ -115,10 +115,8 @@ class DynamicTrendChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: data.amount,
-                  color: isProfit ? Colors.greenAccent : colors.error,
-                  width: recentEntries.length > 30
-                      ? 4
-                      : 16, // Thin the bars out if there are tons of them
+                  color: isProfit ? colors.primary : colors.error,
+                  width: recentEntries.length > 30 ? 4 : 16,
                   borderRadius: .circular(4),
                 ),
               ],

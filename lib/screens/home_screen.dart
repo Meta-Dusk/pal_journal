@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen>
     final isPositive = _lifetimePnL >= 0;
     final displayAmount = AppFormatters.toCurrency(_lifetimePnL.abs());
     final sign = isPositive ? "+" : "-";
-    final accentColor = isPositive ? Colors.greenAccent : colors.error;
+    final accentColor = isPositive ? colors.primary : colors.error;
 
     // --- THE ANIMATED CARD ---
     final hero = Hero(
