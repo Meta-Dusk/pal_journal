@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
+import 'package:pal_journal/services/currency_service.dart';
 
 class CustomDayCell extends StatelessWidget {
   final DateTime day;
@@ -32,11 +33,30 @@ class CustomDayCell extends StatelessWidget {
     } else {
       final compactFormat = NumberFormat.compact();
       // Outputs +15K, -1.5M, etc.
-      pnlString = "${isPositive ? '+' : ''}${compactFormat.format(pnl.abs())}";
+      final pnlFormat = compactFormat.format(
+        CurrencyService.toDisplay(pnl.abs()),
+      );
+      pnlString = "${isPositive ? '+' : ''}$pnlFormat";
     }
     final pnlColor = pnl == 0.0
         ? colors.onSurfaceVariant
         : (isPositive ? colors.primary : colors.error);
+
+    final mainContent = [
+      Flexible(
+        child: FittedBox(
+          fit: .scaleDown,
+          child: Text(
+            pnlString,
+            style: TextStyle(color: pnlColor, fontSize: 12, fontWeight: .w500),
+          ),
+        ),
+      ),
+      if (hasDetails) ...[
+        const SizedBox(width: 4),
+        Icon(Icons.circle, size: 4, color: colors.primary),
+      ],
+    ];
 
     return Container(
       margin: const .all(4.0),
@@ -64,25 +84,7 @@ class CustomDayCell extends StatelessWidget {
             child: Row(
               mainAxisAlignment: .center,
               mainAxisSize: .min,
-              children: [
-                Flexible(
-                  child: FittedBox(
-                    fit: .scaleDown,
-                    child: Text(
-                      pnlString,
-                      style: TextStyle(
-                        color: pnlColor,
-                        fontSize: 12,
-                        fontWeight: .w500,
-                      ),
-                    ),
-                  ),
-                ),
-                if (hasDetails) ...[
-                  const SizedBox(width: 4),
-                  Icon(Icons.circle, size: 4, color: colors.primary),
-                ],
-              ],
+              children: mainContent,
             ),
           ),
         ],

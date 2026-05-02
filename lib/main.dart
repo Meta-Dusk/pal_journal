@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:pal_journal/screens/main_layout.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/services/theme_service.dart';
 
@@ -11,6 +12,7 @@ void main() async {
   isarService = IsarService();
   await ThemeService.init();
   await ThemeService.loadThemeMode();
+  await CurrencyService.init();
   runApp(const MainApp());
 }
 
@@ -19,17 +21,16 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: ThemeService.themeModeNotifier,
-      builder: (context, currentMode, _) {
-        return ValueListenableBuilder(
-          valueListenable: ThemeService.seedColorNotifier,
-          builder: (context, currentSeedColor, _) {
-            return CustomizableMaterialApp(
-              themeMode: currentMode,
-              seedColor: currentSeedColor,
-            );
-          },
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        ThemeService.themeModeNotifier,
+        ThemeService.seedColorNotifier,
+        CurrencyService.exchangeRateNotifier,
+      ]),
+      builder: (context, _) {
+        return CustomizableMaterialApp(
+          themeMode: ThemeService.themeModeNotifier.value,
+          seedColor: ThemeService.seedColorNotifier.value,
         );
       },
     );
@@ -52,7 +53,7 @@ class CustomizableMaterialApp extends StatelessWidget {
       title: "PAL: Journal",
       themeMode: themeMode,
 
-      // 1. Define the Light Theme
+      // Define the Light Theme
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,
@@ -61,7 +62,7 @@ class CustomizableMaterialApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      // 2. Define the Dark Theme
+      // Define the Dark Theme
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,

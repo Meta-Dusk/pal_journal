@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/utils/formatters.dart';
@@ -128,6 +129,8 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
+    final currency = AppFormatters.toCurrency(widget.unallocatedAmount);
+    final symbol = CurrencyService.symbol;
     final dialogContent = [
       TextField(
         controller: _categoryController,
@@ -149,10 +152,8 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
         inputFormatters: [PnLFormatter()],
         decoration: InputDecoration(
           // Remind the user exactly how much space they have left
-          hintText:
-              "Remaining: ₱"
-              "${AppFormatters.toCurrency(widget.unallocatedAmount)}",
-          prefixText: "₱ ",
+          hintText: "Remaining: $symbol$currency",
+          prefixText: "$symbol ",
         ),
       ),
     ];
