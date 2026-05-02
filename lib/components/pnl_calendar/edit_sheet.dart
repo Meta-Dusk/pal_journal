@@ -21,6 +21,15 @@ class _EditSheetState extends State<EditSheet> {
   late TextEditingController _noteController;
   late List<ExpenseItem> _currentBreakdown;
 
+  // --- THE ALGEBRAIC MATH ENGINE ---
+  double get _currentTotal =>
+      AppFormatters.parseCurrency(_amountController.text);
+
+  double get _allocatedAmount =>
+      _currentBreakdown.fold(0.0, (sum, item) => sum + (item.amount ?? 0.0));
+
+  double get _difference => _currentTotal - _allocatedAmount;
+
   @override
   void initState() {
     super.initState();
@@ -39,30 +48,42 @@ class _EditSheetState extends State<EditSheet> {
             )
             .toList() ??
         [];
+
+    _amountController.addListener(_onAmountChanged);
+  }
+
+  void _onAmountChanged() {
+    setState(() {}); // Triggers rebuild to update the visual tracker
   }
 
   @override
   void dispose() {
+    _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _noteController.dispose();
     super.dispose();
   }
 
   void _saveData() async {
-    final amount = AppFormatters.parseCurrency(_amountController.text);
+    // --- SMART AUTO-SYNC ---
+    // If they have breakdowns, the breakdown sum is the ultimate source of truth.
+    // If they forgot to tap the sync button, we do it for them!
+    double finalAmount = _currentTotal;
+    if (_currentBreakdown.isNotEmpty && _difference != 0) {
+      finalAmount = _allocatedAmount;
+    }
+
     await isarService.savePnL(
       widget.day,
-      amount,
+      finalAmount, // Save the mathematically perfect amount
       note: _noteController.text,
       breakdown: _currentBreakdown.toList(),
     );
-    //? Send 'true' back meaning data was saved
     if (mounted) Navigator.pop(context, true);
   }
 
   void _clearData() async {
     await isarService.deletePnLForDate(widget.day);
-    //? Send 'true' back meaning data was deleted
     if (mounted) Navigator.pop(context, true);
   }
 
@@ -100,16 +121,59 @@ class _EditSheetState extends State<EditSheet> {
       ),
     );
 
+    // --- THE SMART TRACKER UI ---
+    final trackerColor = _difference == 0 ? colors.primary : colors.tertiary;
+    final trackerText = _difference == 0
+        ? "Balanced"
+        : "Tap to Sync (Diff: ₱${AppFormatters.toCurrency(_difference.abs())})";
+
     final breakDownHeaderRow = Row(
       mainAxisAlignment: .spaceBetween,
       children: [
-        Text(
-          "Breakdown",
-          style: TextStyle(color: colors.onSurfaceVariant, fontWeight: .bold),
+        Column(
+          crossAxisAlignment: .start,
+          children: [
+            Text(
+              "Breakdown",
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontWeight: .bold,
+              ),
+            ),
+
+            // Only show the tracker/sync button if there are actually breakdowns
+            if (_currentBreakdown.isNotEmpty)
+              GestureDetector(
+                onTap: () {
+                  // Instantly updates the main total to match the breakdown!
+                  setState(
+                    () => _amountController.text = AppFormatters.toCurrency(
+                      _allocatedAmount,
+                    ),
+                  );
+                },
+                child: Row(
+                  children: [
+                    if (_difference != 0)
+                      Icon(Icons.sync, size: 12, color: trackerColor),
+                    if (_difference != 0) const SizedBox(width: 4),
+                    Text(
+                      trackerText,
+                      style: TextStyle(
+                        color: trackerColor,
+                        fontSize: 12,
+                        fontWeight: .bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
         TextButton.icon(
           onPressed: () async {
-            final newItem = await showAddBreakdownDialog(context);
+            // We pass the exact algebraic difference into the dialog to auto-fill it!
+            final newItem = await showAddBreakdownDialog(context, _difference);
             if (newItem != null) {
               setState(() => _currentBreakdown.add(newItem));
             }
@@ -133,7 +197,7 @@ class _EditSheetState extends State<EditSheet> {
         children: [
           Text(
             "Edit ${DateFormat('MMMM d').format(widget.day)}",
-            style: const TextStyle(fontSize: 20, fontWeight: .bold),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           amountTextField,
@@ -151,12 +215,16 @@ class _EditSheetState extends State<EditSheet> {
   }
 
   Row getEntryControls(ColorScheme colors) {
+    // The form is always valid now, because our Save method safely auto-syncs!
+    final bool isFormValid =
+        _amountController.text.isNotEmpty || _currentBreakdown.isNotEmpty;
+
     final resetButton = OutlinedButton(
       onPressed: _clearData,
       style: OutlinedButton.styleFrom(
         foregroundColor: colors.error,
         side: BorderSide(color: colors.error),
-        padding: const .symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: .circular(12)),
       ),
       child: const Text(
@@ -166,10 +234,11 @@ class _EditSheetState extends State<EditSheet> {
     );
 
     final saveButton = ElevatedButton(
-      onPressed: _saveData,
+      onPressed: isFormValid ? _saveData : null,
       style: ElevatedButton.styleFrom(
         backgroundColor: colors.primaryContainer,
         foregroundColor: colors.onPrimaryContainer,
+        disabledBackgroundColor: colors.surfaceContainerHighest,
         padding: const .symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: .circular(12)),
       ),
@@ -185,7 +254,7 @@ class _EditSheetState extends State<EditSheet> {
           Expanded(
             flex: 1,
             child: Padding(
-              padding: const .only(right: 12.0),
+              padding: const EdgeInsets.only(right: 12.0),
               child: resetButton,
             ),
           ),
@@ -230,7 +299,13 @@ class _EditSheetState extends State<EditSheet> {
             setState(() => _currentBreakdown.removeAt(index));
             return true;
           } else if (direction == .startToEnd) {
-            final editedItem = await showEditBreakdownDialog(context, item);
+            // When editing, the allowance is the current difference PLUS the item's own value
+            final editAllowance = _difference + (item.amount ?? 0.0);
+            final editedItem = await showEditBreakdownDialog(
+              context,
+              item,
+              editAllowance,
+            );
             if (editedItem != null) {
               setState(() => _currentBreakdown[index] = editedItem);
             }
