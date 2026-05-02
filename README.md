@@ -35,6 +35,7 @@ The plan for this app, is to be able to support both mobile (**Android**) and de
 | **Dashboard Query Filters** | Granular timeframe selectors and data-filtering mechanisms for the analytics engine. <br><br> _Simply put: Easily switch between viewing your stats for the week, the month, the year, or a custom date range._ | v0.4.0 |
 | **Smart Financial Targets** | Configurable monthly thresholds (Budgets and Profit Goals) with real-time progress tracking. <br><br> _Simply put: Set a limit on what you want to spend or a target for what you want to earn, and the app will track your progress._ | v0.5.0 |
 | **Zero-Based Reconciliation** | Advanced daily ledgers that automatically balance categorized transaction breakdowns into a unified daily net total. <br><br> _Simply put: You can log every detail of your day's income and expenses, and the app will automatically do the math to ensure everything balances perfectly._ | v0.6.0 |
+| **Granular Category Tracking** | Isolated trend analysis for specific cash flow streams. <br><br> _Simply put: Want to see exactly how much you spend on "Food" over the entire year? This will let you filter and track specific tags._ | v0.7.0 |
 
 ## Setup / Installation
 
@@ -48,5 +49,4 @@ Pending features below are yet to be implemented. As soon as they are implemente
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
 | **Cloud Ledger Sync** | Cross-platform data synchronization via authenticated accounts. <br><br> _Simply put: Log in to automatically back up your data and seamlessly access it on both your phone and PC._ | 🟥 Progress => 0% |
-| **Granular Category Tracking** | Isolated trend analysis for specific cash flow streams. <br><br> _Simply put: Want to see exactly how much you spend on "Food" over the entire year? This will let you filter and track specific tags._ | 🟥 Progress => 0% |
 | **Real-Time Forex Conversion** | Automated currency localization for international tracking. <br><br> _Simply put: Traveling or getting paid in a different currency? The app will automatically convert it to your main currency._ | 🟥 Progress => 0% |
