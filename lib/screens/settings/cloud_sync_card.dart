@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:pal_journal/services/auth_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
@@ -13,8 +14,22 @@ class CloudSyncCard extends StatefulWidget {
 class _CloudSyncCardState extends State<CloudSyncCard> {
   bool _isLoading = false;
 
+  bool showWarningOnWindows() {
+    if (Platform.isWindows) {
+      _showMessage(
+        "Data syncing is temporarily disabled on Windows due to an SDK bug."
+        "Use the tools for CSV instead.",
+        isError: true,
+      );
+      return true;
+    }
+    return false;
+  }
+
   // --- BACKUP LOGIC ---
   Future<void> _handleBackup() async {
+    if (showWarningOnWindows()) return;
+
     setState(() => _isLoading = true);
 
     try {
@@ -47,6 +62,8 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
 
   // --- RESTORE LOGIC ---
   Future<void> _handleRestore() async {
+    if (showWarningOnWindows()) return;
+
     final confirmed = await _confirmRestore();
     if (!confirmed) return;
 

@@ -108,14 +108,14 @@ class IsarService {
   Future<void> replaceAllEntries(List<PnLEntry> cloudEntries) async {
     final isar = await db;
     await isar.writeTxn(() async {
-      await isar.pnLEntrys.clear();
-      await isar.pnLEntrys.putAll(cloudEntries);
+      await isar.collection<PnLEntry>().clear();
+      await isar.collection<PnLEntry>().putAll(cloudEntries);
     });
   }
 
   /// Fetches every entry in the local database for cloud backup.
   Future<List<PnLEntry>> getAllEntries() async {
     final isar = await db;
-    return await isar.pnLEntrys.where().findAll();
+    return await isar.collection<PnLEntry>().where().findAll();
   }
 }

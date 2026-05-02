@@ -27,13 +27,19 @@ class PnLEntry {
   /// Note: We don't include 'id' because Firestore will use the Date
   /// as the Document ID!
   Map<String, dynamic> toMap() {
-    return {
+    final Map<String, dynamic> data = {
       'date': date.toIso8601String(),
       'amount': amount,
-      'accountName': accountName,
-      'note': note,
-      'breakdown': breakdown?.map((item) => item.toMap()).toList(),
     };
+
+    // Only add fields if they are NOT null
+    if (accountName != null) data['accountName'] = accountName;
+    if (note != null) data['note'] = note;
+    if (breakdown != null && breakdown!.isNotEmpty) {
+      data['breakdown'] = breakdown!.map((item) => item.toMap()).toList();
+    }
+
+    return data;
   }
 
   /// Converts a Firestore JSON document back into an Isar object.
@@ -59,7 +65,7 @@ class ExpenseItem {
   // --- FIREBASE SERIALIZATION ---
 
   Map<String, dynamic> toMap() {
-    return {'category': category, 'amount': amount};
+    return {'category': category ?? "Uncategorized", 'amount': amount ?? 0.0};
   }
 
   static ExpenseItem fromMap(Map<String, dynamic> map) {
