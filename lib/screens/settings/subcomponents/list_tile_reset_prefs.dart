@@ -5,6 +5,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ListTileResetPreferences extends StatelessWidget {
   const ListTileResetPreferences({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ListTile(
+      shape: const RoundedRectangleBorder(
+        borderRadius: .vertical(top: .circular(16)),
+      ),
+      leading: Icon(Icons.restore, color: colors.error),
+      title: const Text("Reset Preferences"),
+      subtitle: const Text(
+        "Restore default tags and settings",
+        style: TextStyle(fontSize: 12),
+      ),
+      onTap: () => _resetPrefs(context),
+    );
+  }
+
   void _resetPrefs(BuildContext context) async {
     final colors = Theme.of(context).colorScheme;
 
@@ -47,23 +65,5 @@ class ListTileResetPreferences extends StatelessWidget {
         const SnackBar(content: Text("Preferences reset to default.")),
       );
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return ListTile(
-      shape: const RoundedRectangleBorder(
-        borderRadius: .vertical(top: .circular(16)),
-      ),
-      leading: Icon(Icons.restore, color: colors.error),
-      title: const Text("Reset Preferences"),
-      subtitle: const Text(
-        "Restore default tags and settings",
-        style: TextStyle(fontSize: 12),
-      ),
-      onTap: () => _resetPrefs(context),
-    );
   }
 }

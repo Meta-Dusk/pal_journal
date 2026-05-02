@@ -7,6 +7,27 @@ import 'package:pal_journal/main.dart';
 class ListTileFactoryReset extends StatelessWidget {
   const ListTileFactoryReset({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ListTile(
+      shape: const RoundedRectangleBorder(
+        borderRadius: .vertical(bottom: .circular(16)),
+      ),
+      leading: Icon(Icons.delete_forever, color: colors.error),
+      title: Text(
+        "Factory Reset",
+        style: TextStyle(fontWeight: .bold, color: colors.error),
+      ),
+      subtitle: const Text(
+        "Permanently delete ledger and settings",
+        style: TextStyle(fontSize: 12),
+      ),
+      onTap: () => _factoryReset(context),
+    );
+  }
+
   void _factoryReset(BuildContext context) async {
     final colors = Theme.of(context).colorScheme;
     final controller = TextEditingController();
@@ -112,26 +133,5 @@ class ListTileFactoryReset extends StatelessWidget {
       // Pop back to the root (Home Screen) so the calendar completely refreshes
       Navigator.popUntil(context, (route) => route.isFirst);
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return ListTile(
-      shape: const RoundedRectangleBorder(
-        borderRadius: .vertical(bottom: .circular(16)),
-      ),
-      leading: Icon(Icons.delete_forever, color: colors.error),
-      title: Text(
-        "Factory Reset",
-        style: TextStyle(fontWeight: .bold, color: colors.error),
-      ),
-      subtitle: const Text(
-        "Permanently delete ledger and settings",
-        style: TextStyle(fontSize: 12),
-      ),
-      onTap: () => _factoryReset(context),
-    );
   }
 }

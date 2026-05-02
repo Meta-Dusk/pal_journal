@@ -5,6 +5,36 @@ import 'package:pal_journal/services/theme_service.dart';
 class ListTileThemeColor extends StatelessWidget {
   const ListTileThemeColor({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ValueListenableBuilder<Color>(
+      valueListenable: ThemeService.seedColorNotifier,
+      builder: (context, currentColor, child) {
+        return ListTile(
+          tileColor: colors.surfaceContainer,
+          leading: Icon(Icons.palette, color: colors.primary),
+          title: Text("App Theme Color"),
+          subtitle: Text(
+            "Choose your custom accent color",
+            style: TextStyle(fontSize: 12),
+          ),
+          trailing: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: currentColor,
+              shape: .circle,
+              border: .all(width: 1),
+            ),
+          ),
+          onTap: () => _showDialog(context, currentColor),
+        );
+      },
+    );
+  }
+
   void _showDialog(BuildContext context, Color currentColor) {
     // Temporary variable to hold the color while they drag the wheel
     Color pickerColor = currentColor;
@@ -40,37 +70,6 @@ class ListTileThemeColor extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return ValueListenableBuilder<Color>(
-      valueListenable: ThemeService.seedColorNotifier,
-      builder: (context, currentColor, child) {
-        return ListTile(
-          tileColor: colors.surfaceContainer,
-          shape: RoundedRectangleBorder(borderRadius: .circular(12)),
-          leading: Icon(Icons.palette, color: colors.primary),
-          title: Text("App Theme Color"),
-          subtitle: Text(
-            "Choose your custom accent color",
-            style: TextStyle(fontSize: 12),
-          ),
-          trailing: Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: currentColor,
-              shape: .circle,
-              border: .all(width: 1),
-            ),
-          ),
-          onTap: () => _showDialog(context, currentColor),
-        );
-      },
     );
   }
 }
