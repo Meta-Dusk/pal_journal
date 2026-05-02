@@ -8,9 +8,13 @@ class CurrencyService {
   static final targetCurrencyNotifier = ValueNotifier<String>('PHP');
   static final exchangeRateNotifier = ValueNotifier<double>(1.0);
 
+  static final allRatesNotifier = ValueNotifier<Map<String, double>>({});
+  static final lastUpdatedNotifier = ValueNotifier<DateTime?>(null);
+
   static const String _currencyKey = 'app_target_currency';
   static const String _ratesCacheKey = 'app_rates_cache';
   static const String _lastFetchKey = 'app_last_fetch';
+  static const String url = 'https://open.er-api.com/v6/latest/PHP';
 
   /// Map of supported currencies and their symbols
   static final Map<String, String> supportedCurrencies = {
@@ -40,9 +44,7 @@ class CurrencyService {
       if (now - lastFetch < 12 * 60 * 60 * 1000) return;
 
       // PHP is our base database currency
-      final response = await http.get(
-        Uri.parse('https://open.er-api.com/v6/latest/PHP'),
-      );
+      final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         await prefs.setString(_ratesCacheKey, response.body);
@@ -54,15 +56,55 @@ class CurrencyService {
     }
   }
 
+  static Future<bool> forceFetchRates() async {
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_ratesCacheKey, response.body);
+        await prefs.setInt(
+          _lastFetchKey,
+          DateTime.now().millisecondsSinceEpoch,
+        );
+        await _loadCachedRates();
+        return true; // Success!
+      }
+    } catch (e) {
+      debugPrint("Forex manual fetch failed: $e");
+    }
+    return false; // Failed!
+  }
+
   static Future<void> _loadCachedRates() async {
     final prefs = await SharedPreferences.getInstance();
     final cache = prefs.getString(_ratesCacheKey);
+    final lastFetch = prefs.getInt(_lastFetchKey);
+
+    // Update the Last Fetched Timestamp UI
+    if (lastFetch != null) {
+      lastUpdatedNotifier.value = DateTime.fromMillisecondsSinceEpoch(
+        lastFetch,
+      );
+    }
 
     if (cache != null) {
       final data = jsonDecode(cache);
-      final rates = data['rates'] as Map<String, dynamic>;
+      final rawRates = data['rates'] as Map<String, dynamic>;
+
+      // Filter out junk currencies so the UI list is clean
+      final Map<String, double> filteredRates = {};
+      for (var code in supportedCurrencies.keys) {
+        if (rawRates.containsKey(code)) {
+          filteredRates[code] = (rawRates[code] as num).toDouble();
+        }
+      }
+
+      // Populate the notifier so the UI can draw the list!
+      allRatesNotifier.value = filteredRates;
+
       final target = targetCurrencyNotifier.value;
-      exchangeRateNotifier.value = (rates[target] ?? 1.0).toDouble();
+      exchangeRateNotifier.value = (rawRates[target] ?? 1.0).toDouble();
     }
   }
 
