@@ -8,10 +8,12 @@ class AuthService {
   static const String unimplementedErrorMessage =
       "Google Sign-In is not currently supported on Windows. "
       "Please use Email & Password.";
+  static const String serverClientId =
+      "579107211170-0f7h27bkb704ep3tjim36do6fl4pre9a.apps.googleusercontent.com";
 
   static Future<void> init() async {
     try {
-      await GoogleSignIn.instance.initialize();
+      await GoogleSignIn.instance.initialize(serverClientId: serverClientId);
     } on UnimplementedError {
       debugPrint(unimplementedErrorMessage);
     }
@@ -109,7 +111,11 @@ class AuthService {
 
   // --- SIGN OUT ---
   static Future<void> signOut() async {
-    await GoogleSignIn.instance.signOut();
+    try {
+      await GoogleSignIn.instance.signOut();
+    } on UnimplementedError {
+      debugPrint(unimplementedErrorMessage);
+    }
     await _auth.signOut();
     currentUserNotifier.value = null;
   }

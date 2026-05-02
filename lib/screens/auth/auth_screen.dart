@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:pal_journal/services/auth_service.dart';
 import 'breathing_logo.dart';
@@ -107,15 +110,18 @@ class _AuthScreenState extends State<AuthScreen> {
       passwordField(colors),
       const SizedBox(height: 24),
 
-      // --- ACTIONS ---
-      actionsButton(colors),
-      const SizedBox(height: 24),
-      StyledSpacer(),
-      const SizedBox(height: 24),
+      if (kIsWeb || !Platform.isWindows) ...[
+        // --- ACTIONS ---
+        actionsButton(colors),
+        const SizedBox(height: 24),
+        StyledSpacer(),
+        const SizedBox(height: 24),
 
-      // --- GOOGLE BUTTON ---
-      googleButton(colors),
-      const SizedBox(height: 16),
+        // --- GOOGLE BUTTON ---
+        googleButton(colors),
+        const SizedBox(height: 16),
+      ],
+
       TextButton(
         onPressed: () => setState(() {
           _isLogin = !_isLogin;

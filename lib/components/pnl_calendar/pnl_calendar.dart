@@ -79,6 +79,8 @@ class _PnLCalendarState extends State<PnLCalendar> {
       loadedData[normalizedDate] = entry;
     }
 
+    if (!mounted) return;
+
     setState(() {
       _dailyEntries = loadedData;
     });
