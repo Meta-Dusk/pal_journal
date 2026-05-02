@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/services/goal_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 import 'insight_card.dart';
@@ -19,13 +20,14 @@ class QuickInsightsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final symbol = CurrencyService.symbol;
     return Column(
       children: [
         Row(
           children: [
             InsightCard(
               title: "Daily Avg",
-              value: "₱${AppFormatters.toCurrency(insights['avg'])}",
+              value: "$symbol${_getCurrency(insights['avg'])}",
               icon: Icons.show_chart,
             ),
             const SizedBox(width: 12),
@@ -34,7 +36,7 @@ class QuickInsightsGrid extends StatelessWidget {
                 title: monthlyGoal!.type == .budget
                     ? "Monthly Budget"
                     : "Profit Target",
-                value: "₱${AppFormatters.toCurrency(monthlyGoal!.amount)}",
+                value: "$symbol${_getCurrency(monthlyGoal!.amount)}",
                 icon: monthlyGoal!.type == .budget
                     ? Icons.money_off
                     : Icons.trending_up,
@@ -52,7 +54,7 @@ class QuickInsightsGrid extends StatelessWidget {
           children: [
             InsightCard(
               title: "Max Loss in a Day",
-              value: "₱${AppFormatters.toCurrency(insights['maxLoss'])}",
+              value: "$symbol${_getCurrency(insights['maxLoss'])}",
               icon: Icons.warning_amber_rounded,
               isDanger: true,
             ),
@@ -68,3 +70,6 @@ class QuickInsightsGrid extends StatelessWidget {
     );
   }
 }
+
+String _getCurrency(double value) =>
+    AppFormatters.toCurrency(CurrencyService.toDisplay(value));

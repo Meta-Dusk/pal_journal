@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:pal_journal/main.dart';
 import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -52,7 +53,9 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final isPositive = _lifetimePnL >= 0;
-    final displayAmount = AppFormatters.toCurrency(_lifetimePnL.abs());
+    final displayAmount = AppFormatters.toCurrency(
+      CurrencyService.toDisplay(_lifetimePnL.abs()),
+    );
     final sign = isPositive ? "+" : "-";
     final accentColor = isPositive ? colors.primary : colors.error;
 
@@ -161,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen>
     String displayAmount,
     Color accentColor,
   ) {
+    final symbol = CurrencyService.symbol;
     final mainContent = [
       // Left Side: The Text
       Expanded(
@@ -177,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen>
               fit: .scaleDown,
               alignment: .centerLeft,
               child: Text(
-                "$sign ₱$displayAmount",
+                "$sign $symbol$displayAmount",
                 style: TextStyle(
                   fontSize: 36,
                   fontWeight: .bold,

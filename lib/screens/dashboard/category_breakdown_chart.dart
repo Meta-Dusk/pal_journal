@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
 class CategoryBreakdownChart extends StatefulWidget {
@@ -87,7 +88,7 @@ class _CategoryBreakdownChartState extends State<CategoryBreakdownChart> {
       );
     }
 
-    final breakdownDataEntries = SizedBox(
+    final pieChart = SizedBox(
       height: 200,
       child: PieChart(
         PieChartData(
@@ -110,6 +111,45 @@ class _CategoryBreakdownChartState extends State<CategoryBreakdownChart> {
       ),
     );
 
+    final breakdownDataEntries = breakdownData.entries
+        .toList()
+        .asMap()
+        .entries
+        .map((mapEntry) {
+          final index = mapEntry.key;
+          final category = mapEntry.value.key;
+          final amount = mapEntry.value.value;
+
+          final colorIndex = index % dynamicChartColors.length;
+          final color = dynamicChartColors[colorIndex];
+
+          final symbol = CurrencyService.symbol;
+
+          return Padding(
+            padding: const .only(bottom: 12.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(color: color, shape: .circle),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    category,
+                    style: TextStyle(color: colors.onSurface, fontSize: 14),
+                  ),
+                ),
+                Text(
+                  "$symbol${_getCurrency(amount)}",
+                  style: TextStyle(color: colors.onSurface, fontWeight: .bold),
+                ),
+              ],
+            ),
+          );
+        });
+
     final mainContent = [
       Container(
         padding: const .all(24),
@@ -120,7 +160,7 @@ class _CategoryBreakdownChartState extends State<CategoryBreakdownChart> {
         child: Column(
           children: [
             if (breakdownData.isNotEmpty)
-              breakdownDataEntries
+              pieChart
             else
               const SizedBox(
                 height: 200,
@@ -128,40 +168,7 @@ class _CategoryBreakdownChartState extends State<CategoryBreakdownChart> {
               ),
 
             const SizedBox(height: 24),
-            ...breakdownData.entries.toList().asMap().entries.map((mapEntry) {
-              final index = mapEntry.key;
-              final category = mapEntry.value.key;
-              final amount = mapEntry.value.value;
-              final color =
-                  dynamicChartColors[index % dynamicChartColors.length];
-
-              return Padding(
-                padding: const .only(bottom: 12.0),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(color: color, shape: .circle),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        category,
-                        style: TextStyle(color: colors.onSurface, fontSize: 14),
-                      ),
-                    ),
-                    Text(
-                      "₱${AppFormatters.toCurrency(amount)}",
-                      style: TextStyle(
-                        color: colors.onSurface,
-                        fontWeight: .bold,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
+            ...breakdownDataEntries,
           ],
         ),
       ),
@@ -206,4 +213,7 @@ class _CategoryBreakdownChartState extends State<CategoryBreakdownChart> {
 
     return Column(crossAxisAlignment: .start, children: mainContent);
   }
+
+  String _getCurrency(double value) =>
+      AppFormatters.toCurrency(CurrencyService.toDisplay(value));
 }

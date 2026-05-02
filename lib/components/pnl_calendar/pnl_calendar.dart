@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
@@ -255,6 +256,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
     // The "Unsynced Income" is the total income
     // minus what has already been added to the budget
     final unsyncedIncome = _monthlyIncome - _currentMonthGoal!.syncedOffset;
+    final symbol = CurrencyService.symbol;
 
     if (isBudget) {
       label = "Monthly Budget";
@@ -266,8 +268,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
       isOverBudget = currentValue > target;
       barColor = isOverBudget ? colors.error : colors.primary;
       valueText =
-          "₱${AppFormatters.toCurrency(currentValue)} "
-          "/ ₱${AppFormatters.toCurrency(target)}";
+          "$symbol${_getCurrency(currentValue)} / $symbol${_getCurrency(target)}";
     } else {
       label = "Profit Target";
       target = _currentMonthGoal!.amount;
@@ -278,8 +279,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
       isGoalMet = currentValue >= target;
       barColor = isGoalMet ? Colors.greenAccent : colors.primary;
       valueText =
-          "₱${AppFormatters.toCurrency(currentValue)} "
-          "/ ₱${AppFormatters.toCurrency(target)}";
+          "$symbol${_getCurrency(currentValue)} / $symbol${_getCurrency(target)}";
     }
 
     final mainContent = [
@@ -354,7 +354,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
                 Icon(Icons.auto_awesome, color: colors.primary, size: 14),
                 const SizedBox(width: 6),
                 Text(
-                  "Earned +₱${AppFormatters.toCurrency(unsyncedIncome)}! "
+                  "Earned +$symbol${_getCurrency(unsyncedIncome)}! "
                   "Tap to add to budget.",
                   style: TextStyle(
                     color: colors.primary,
@@ -382,4 +382,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
       ),
     );
   }
+
+  String _getCurrency(double value) =>
+      AppFormatters.toCurrency(CurrencyService.toDisplay(value));
 }

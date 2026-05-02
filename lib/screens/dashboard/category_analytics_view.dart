@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar/isar.dart';
 import 'package:intl/intl.dart';
@@ -31,7 +32,7 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
-    // 1. Load available tags
+    // Load available tags
     final prefs = await SharedPreferences.getInstance();
     final tags = prefs.getStringList('user_preset_tags') ?? [];
 
@@ -39,7 +40,7 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
       _selectedCategory = tags.first;
     }
 
-    // 2. Fetch all entries from Isar
+    // Fetch all entries from Isar
     final isar = await isarService.db;
     final allEntries = await isar
         .collection<PnLEntry>()
@@ -47,7 +48,7 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
         .sortByDateDesc()
         .findAll();
 
-    // 3. Process the data for the selected category
+    // Process the data for the selected category
     double total = 0.0;
     List<Map<String, dynamic>> transactions = [];
 
@@ -94,6 +95,7 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
       );
     }
 
+    final symbol = CurrencyService.symbol;
     final totalSummaryCard = Padding(
       padding: const .symmetric(horizontal: 24.0),
       child: Container(
@@ -113,8 +115,8 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
             ),
             const SizedBox(height: 8),
             Text(
-              "${_categoryTotal >= 0 ? '+' : '-'} ₱"
-              "${AppFormatters.toCurrency(_categoryTotal.abs())}",
+              "${_categoryTotal >= 0 ? '+' : '-'} $symbol"
+              "${_getCurrency(_categoryTotal.abs())}",
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -171,17 +173,17 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
     return Column(
       crossAxisAlignment: .start,
       children: [
-        // --- 1. THE CATEGORY SELECTOR (Horizontal Chips) ---
+        // --- THE CATEGORY SELECTOR (Horizontal Chips) ---
         categorySelector,
 
         const SizedBox(height: 24),
 
-        // --- 2. THE TOTAL SUMMARY CARD ---
+        // --- THE TOTAL SUMMARY CARD ---
         totalSummaryCard,
 
         const SizedBox(height: 24),
 
-        // --- 3. THE TRANSACTION HISTORY LIST ---
+        // --- THE TRANSACTION HISTORY LIST ---
         Padding(
           padding: const .symmetric(horizontal: 24.0),
           child: Text(
@@ -234,6 +236,7 @@ class TransactionsBuilder extends StatelessWidget {
         final date = tx['date'] as DateTime;
         final amount = tx['amount'] as double;
         final isPositive = amount >= 0;
+        final symbol = CurrencyService.symbol;
 
         return Container(
           margin: const .only(bottom: 8),
@@ -250,8 +253,8 @@ class TransactionsBuilder extends StatelessWidget {
                 style: const TextStyle(fontWeight: .w500),
               ),
               Text(
-                "${isPositive ? '+' : '-'} ₱"
-                "${AppFormatters.toCurrency(amount.abs())}",
+                "${isPositive ? '+' : '-'} $symbol"
+                "${_getCurrency(amount.abs())}",
                 style: TextStyle(
                   fontWeight: .bold,
                   color: isPositive ? colors.primary : colors.error,
@@ -264,3 +267,6 @@ class TransactionsBuilder extends StatelessWidget {
     );
   }
 }
+
+String _getCurrency(double value) =>
+    AppFormatters.toCurrency(CurrencyService.toDisplay(value));

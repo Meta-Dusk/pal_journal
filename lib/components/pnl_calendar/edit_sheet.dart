@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/main.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'breakdown_dialogs.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
@@ -35,7 +36,7 @@ class _EditSheetState extends State<EditSheet> {
     super.initState();
     _amountController = TextEditingController(
       text: widget.entry != null && widget.entry!.amount != 0.0
-          ? AppFormatters.toCurrency(widget.entry!.amount)
+          ? _getCurrency(widget.entry!.amount)
           : '',
     );
     _noteController = TextEditingController(text: widget.entry?.note ?? '');
@@ -44,7 +45,7 @@ class _EditSheetState extends State<EditSheet> {
             ?.map(
               (e) => ExpenseItem()
                 ..category = e.category
-                ..amount = e.amount,
+                ..amount = CurrencyService.toDisplay(e.amount ?? 0.0),
             )
             .toList() ??
         [];
@@ -68,16 +69,23 @@ class _EditSheetState extends State<EditSheet> {
     // --- SMART AUTO-SYNC ---
     // If they have breakdowns, the breakdown sum is the ultimate source of truth.
     // If they forgot to tap the sync button, we do it for them!
-    double finalAmount = _currentTotal;
+    double finalDisplayAmount = _currentTotal;
     if (_currentBreakdown.isNotEmpty && _difference != 0) {
-      finalAmount = _allocatedAmount;
+      finalDisplayAmount = _allocatedAmount;
     }
+
+    final finalBaseAmount = CurrencyService.toBase(finalDisplayAmount);
+    final baseBreakdown = _currentBreakdown.map((item) {
+      return ExpenseItem()
+        ..category = item.category
+        ..amount = CurrencyService.toBase(item.amount ?? 0.0);
+    }).toList();
 
     await isarService.savePnL(
       widget.day,
-      finalAmount, // Save the mathematically perfect amount
+      finalBaseAmount,
       note: _noteController.text,
-      breakdown: _currentBreakdown.toList(),
+      breakdown: baseBreakdown,
     );
     if (mounted) Navigator.pop(context, true);
   }
@@ -90,6 +98,7 @@ class _EditSheetState extends State<EditSheet> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final symbol = CurrencyService.symbol;
 
     final amountTextField = TextField(
       controller: _amountController,
@@ -98,7 +107,7 @@ class _EditSheetState extends State<EditSheet> {
       style: const TextStyle(fontSize: 24),
       decoration: InputDecoration(
         hintText: "0.00",
-        prefixText: "₱ ",
+        prefixText: "$symbol ",
         filled: true,
         fillColor: colors.surfaceContainerHighest,
         border: OutlineInputBorder(
@@ -123,9 +132,10 @@ class _EditSheetState extends State<EditSheet> {
 
     // --- THE SMART TRACKER UI ---
     final trackerColor = _difference == 0 ? colors.primary : colors.tertiary;
+    final currency = _getCurrency(_difference.abs());
     final trackerText = _difference == 0
         ? "Balanced"
-        : "Tap to Sync (Diff: ₱${AppFormatters.toCurrency(_difference.abs())})";
+        : "Tap to Sync (Diff: $symbol$currency)";
 
     final breakDownHeaderRow = Row(
       mainAxisAlignment: .spaceBetween,
@@ -146,11 +156,9 @@ class _EditSheetState extends State<EditSheet> {
               GestureDetector(
                 onTap: () {
                   // Instantly updates the main total to match the breakdown!
-                  setState(
-                    () => _amountController.text = AppFormatters.toCurrency(
-                      _allocatedAmount,
-                    ),
-                  );
+                  setState(() {
+                    _amountController.text = _getCurrency(_allocatedAmount);
+                  });
                 },
                 child: Row(
                   children: [
@@ -271,6 +279,8 @@ class _EditSheetState extends State<EditSheet> {
     return breakdownList.asMap().entries.map((entry) {
       final index = entry.key;
       final item = entry.value;
+      final symbol = CurrencyService.symbol;
+      final currency = _getCurrency(item.amount ?? 0.0);
 
       return Dismissible(
         key: UniqueKey(),
@@ -328,7 +338,7 @@ class _EditSheetState extends State<EditSheet> {
                 item.category ?? "",
                 style: const TextStyle(fontWeight: .bold),
               ),
-              Text("₱ ${AppFormatters.toCurrency(item.amount ?? 0.0)}"),
+              Text("$symbol $currency"),
             ],
           ),
         ),
@@ -336,3 +346,5 @@ class _EditSheetState extends State<EditSheet> {
     });
   }
 }
+
+String _getCurrency(double amount) => AppFormatters.toCurrency(amount);

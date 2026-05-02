@@ -273,13 +273,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // --- NEW TABBED LAYOUT ---
     return DefaultTabController(
-      length: 2, // We have two tabs now!
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           elevation: 0,
           title: const Text("Analytics"),
           centerTitle: true,
-          // 1. Add the TabBar to the bottom of the AppBar
+          // Add the TabBar to the bottom of the AppBar
           bottom: TabBar(
             indicatorColor: colors.primary,
             labelColor: colors.primary,
@@ -290,7 +290,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        // 2. Wrap your views in a TabBarView!
         body: TabBarView(
           children: [
             // TAB 1: The original Overview content

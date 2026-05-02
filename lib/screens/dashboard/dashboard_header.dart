@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
 class DashboardHeader extends StatefulWidget {
@@ -43,7 +44,9 @@ class _DashboardHeaderState extends State<DashboardHeader>
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final displayAmount = AppFormatters.toCurrency(widget.totalAmount.abs());
+    final displayAmount = AppFormatters.toCurrency(
+      CurrencyService.toDisplay(widget.totalAmount.abs()),
+    );
     final sign = widget.isPositive ? "+" : "-";
     final accentColor = widget.isPositive ? colors.primary : colors.error;
 
@@ -69,6 +72,7 @@ class _DashboardHeaderState extends State<DashboardHeader>
     String displayAmount,
     Color accentColor,
   ) {
+    final symbol = CurrencyService.symbol;
     final lifetimeNetPnlText = Expanded(
       child: Column(
         crossAxisAlignment: .start,
@@ -80,9 +84,9 @@ class _DashboardHeaderState extends State<DashboardHeader>
           const SizedBox(height: 8),
           FittedBox(
             fit: .scaleDown,
-            alignment: Alignment.centerLeft,
+            alignment: .centerLeft,
             child: Text(
-              "$sign ₱$displayAmount",
+              "$sign $symbol$displayAmount",
               style: TextStyle(
                 fontSize: 36,
                 fontWeight: .bold,
@@ -95,11 +99,11 @@ class _DashboardHeaderState extends State<DashboardHeader>
     );
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: .start,
+      mainAxisSize: .min,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: .center,
           children: [
             lifetimeNetPnlText,
             const SizedBox(width: 16),
@@ -114,7 +118,7 @@ class _DashboardHeaderState extends State<DashboardHeader>
                   height: 80,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+                    shape: .circle,
                   ),
                   child: Icon(Icons.pets, color: accentColor, size: 40),
                 );
@@ -168,10 +172,7 @@ class _DashboardHeaderState extends State<DashboardHeader>
               end: Alignment(alignShift + 1.0, 1.0),
             ),
             borderRadius: .circular(24),
-            border: Border.all(
-              color: accentColor.withValues(alpha: 0.3),
-              width: 1,
-            ),
+            border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
             boxShadow: [
               BoxShadow(
                 color: accentColor.withValues(

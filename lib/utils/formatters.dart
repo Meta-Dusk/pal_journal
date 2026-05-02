@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:pal_journal/services/currency_service.dart';
 
 class AppFormatters {
   // Converts 150000.5 to "150,000.50"
@@ -14,7 +15,7 @@ class AppFormatters {
     final cleanString = input
         .replaceAll(',', '')
         .replaceAll(' ', '')
-        .replaceAll('₱', '');
+        .replaceAll(CurrencyService.symbol, '');
     return double.tryParse(cleanString) ?? 0.0;
   }
 }
