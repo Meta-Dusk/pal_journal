@@ -32,6 +32,7 @@ The plan for this app, is to be able to support both mobile (**Android**) and de
 | **PnL Tools** | Tools such as a CSV Data importer and exporter, for all your saved data. | v0.2.0 |
 | **Settings** | Additional settings (global) for the app. | v0.2.0 |
 | **Customizable Themes** | The app uses a Material 3 design scheme to easily change theme schemes on the go. | v0.3.0 |
+| **Dashboard Settings** | Filters and other settings for the dashboard. | v0.4.0 |
 
 ## Setup / Installation
 
@@ -45,4 +46,4 @@ Pending features below are yet to be implemented. As soon as they are implemente
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
 | **Data Syncing** | Optional account creation for data syncing across all devices. | 🟥 Progress => 0% |
-| **Dashboard Settings** | Filters and other settings for the dashboard. | 🟥 Progress => 0% |
+| **Dashboard Settings** | Filters and other settings for the dashboard. | ✅ Progress => 100% |

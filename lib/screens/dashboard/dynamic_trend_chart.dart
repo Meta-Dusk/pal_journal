@@ -3,10 +3,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 
-class WeeklyTrendChart extends StatelessWidget {
+class DynamicTrendChart extends StatelessWidget {
   final List<PnLEntry> recentEntries;
 
-  const WeeklyTrendChart({super.key, required this.recentEntries});
+  const DynamicTrendChart({super.key, required this.recentEntries});
 
   double _getMaxY() {
     if (recentEntries.isEmpty) return 100;
@@ -41,23 +41,36 @@ class WeeklyTrendChart extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            "Not enough data for this week",
+            "No data for this date range",
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
         ),
       );
     }
 
+    // --- DYNAMIC GRANULARITY INTERVAL ---
+    // If we have 30 days, dividing by 6 gives an interval of 5.
+    // It will only show labels for Day 1, Day 6, Day 11, etc.
+    final int labelInterval = (recentEntries.length > 7)
+        ? (recentEntries.length / 6).ceil()
+        : 1;
+
     final bottomSideTitles = SideTitles(
       showTitles: true,
+      // Tell FlChart to respect our mathematical interval
+      interval: labelInterval.toDouble(),
       getTitlesWidget: (double value, TitleMeta meta) {
-        if (value.toInt() >= 0 && value.toInt() < recentEntries.length) {
-          final date = recentEntries[value.toInt()].date;
+        final index = value.toInt();
+        if (index >= 0 && index < recentEntries.length) {
+          final date = recentEntries[index].date;
+          // If it's a long range, show Date (Oct 12). If short, show Day (Mon).
+          final formatStr = recentEntries.length > 14 ? 'MMM d' : 'EEE';
+
           return Padding(
             padding: const .only(top: 8.0),
             child: Text(
-              DateFormat('EEE').format(date),
-              style: TextStyle(color: colors.secondary, fontSize: 12),
+              DateFormat(formatStr).format(date),
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 10),
             ),
           );
         }
@@ -103,7 +116,9 @@ class WeeklyTrendChart extends StatelessWidget {
                 BarChartRodData(
                   toY: data.amount,
                   color: isProfit ? Colors.greenAccent : colors.error,
-                  width: 16,
+                  width: recentEntries.length > 30
+                      ? 4
+                      : 16, // Thin the bars out if there are tons of them
                   borderRadius: .circular(4),
                 ),
               ],
