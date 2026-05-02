@@ -197,7 +197,7 @@ class _EditSheetState extends State<EditSheet> {
         children: [
           Text(
             "Edit ${DateFormat('MMMM d').format(widget.day)}",
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 20, fontWeight: .bold),
           ),
           const SizedBox(height: 16),
           amountTextField,
@@ -224,7 +224,7 @@ class _EditSheetState extends State<EditSheet> {
       style: OutlinedButton.styleFrom(
         foregroundColor: colors.error,
         side: BorderSide(color: colors.error),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const .symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: .circular(12)),
       ),
       child: const Text(
@@ -254,7 +254,7 @@ class _EditSheetState extends State<EditSheet> {
           Expanded(
             flex: 1,
             child: Padding(
-              padding: const EdgeInsets.only(right: 12.0),
+              padding: const .only(right: 12.0),
               child: resetButton,
             ),
           ),
@@ -299,7 +299,8 @@ class _EditSheetState extends State<EditSheet> {
             setState(() => _currentBreakdown.removeAt(index));
             return true;
           } else if (direction == .startToEnd) {
-            // When editing, the allowance is the current difference PLUS the item's own value
+            // When editing, the allowance is the current
+            // difference PLUS the item's own value
             final editAllowance = _difference + (item.amount ?? 0.0);
             final editedItem = await showEditBreakdownDialog(
               context,

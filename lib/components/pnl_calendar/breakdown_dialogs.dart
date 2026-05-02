@@ -145,15 +145,13 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
       const SizedBox(height: 16),
       TextField(
         controller: _amountController,
-        keyboardType: const TextInputType.numberWithOptions(
-          decimal: true,
-          signed: true,
-        ),
+        keyboardType: const .numberWithOptions(decimal: true, signed: true),
         inputFormatters: [PnLFormatter()],
         decoration: InputDecoration(
-          // 5. Remind the user exactly how much space they have left
+          // Remind the user exactly how much space they have left
           hintText:
-              "Remaining: ₱${AppFormatters.toCurrency(widget.unallocatedAmount)}",
+              "Remaining: ₱"
+              "${AppFormatters.toCurrency(widget.unallocatedAmount)}",
           prefixText: "₱ ",
         ),
       ),

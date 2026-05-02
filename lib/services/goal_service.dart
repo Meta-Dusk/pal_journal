@@ -25,7 +25,7 @@ class GoalService {
     if (parts.length < 2) return null;
 
     return GoalData(
-      type: parts[0] == 'profit' ? GoalType.profit : GoalType.budget,
+      type: parts[0] == 'profit' ? .profit : .budget,
       amount: double.tryParse(parts[1]) ?? 0.0,
       // Safely parse the 3rd part if it exists, otherwise default to 0.0
       syncedOffset: parts.length == 3
@@ -42,7 +42,7 @@ class GoalService {
     double syncedOffset = 0.0,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final typeStr = type == GoalType.profit ? 'profit' : 'budget';
+    final typeStr = type == .profit ? 'profit' : 'budget';
     await prefs.setString(_getKey(month), '$typeStr|$amount|$syncedOffset');
   }
 

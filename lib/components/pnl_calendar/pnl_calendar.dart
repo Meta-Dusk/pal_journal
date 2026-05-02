@@ -54,6 +54,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
         .fold(0.0, (sum, e) => sum + e.amount);
   }
 
+  /// Profit naturally goes up and down via algebraic Net PnL!
   double get _netProfit {
     return _monthlyIncome - _monthlyExpenses; // True algebraic Net PnL
   }
@@ -241,7 +242,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
   Widget buildMonthlyGoalIndicator(ColorScheme colors) {
     if (_currentMonthGoal == null) return const SizedBox.shrink();
 
-    final isBudget = _currentMonthGoal!.type == GoalType.budget;
+    final isBudget = _currentMonthGoal!.type == .budget;
 
     double target;
     double progress;
@@ -251,7 +252,8 @@ class _PnLCalendarState extends State<PnLCalendar> {
     String label;
     String valueText;
 
-    // The "Unsynced Income" is the total income minus what has already been added to the budget
+    // The "Unsynced Income" is the total income
+    // minus what has already been added to the budget
     final unsyncedIncome = _monthlyIncome - _currentMonthGoal!.syncedOffset;
 
     if (isBudget) {
@@ -264,12 +266,12 @@ class _PnLCalendarState extends State<PnLCalendar> {
       isOverBudget = currentValue > target;
       barColor = isOverBudget ? colors.error : colors.primary;
       valueText =
-          "₱${AppFormatters.toCurrency(currentValue)} / ₱${AppFormatters.toCurrency(target)}";
+          "₱${AppFormatters.toCurrency(currentValue)} "
+          "/ ₱${AppFormatters.toCurrency(target)}";
     } else {
       label = "Profit Target";
       target = _currentMonthGoal!.amount;
-      final currentValue =
-          _netProfit; // Profit naturally goes up and down via algebraic Net PnL!
+      final currentValue = _netProfit;
 
       progress = target > 0 ? (currentValue / target).clamp(0.0, 1.0) : 0.0;
       if (currentValue < 0) progress = 0.0;
