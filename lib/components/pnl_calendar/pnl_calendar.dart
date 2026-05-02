@@ -257,7 +257,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
       // If currentValue is negative (they are at a net loss), progress is 0.
       if (currentValue < 0) progress = 0.0;
       isGoalMet = currentValue >= target;
-      barColor = isGoalMet ? Colors.greenAccent : colors.primary;
+      barColor = isGoalMet ? colors.primary : colors.error;
     }
 
     final mainContent = [
@@ -302,7 +302,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
         const SizedBox(height: 8),
         Text(
           "You hit your profit target! Awesome!",
-          style: TextStyle(color: Colors.greenAccent, fontSize: 12),
+          style: TextStyle(color: colors.primary, fontSize: 12),
         ),
       ],
     ];

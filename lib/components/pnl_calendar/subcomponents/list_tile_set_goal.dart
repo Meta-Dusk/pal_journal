@@ -57,7 +57,7 @@ class _ListTileSetGoalState extends State<ListTileSetGoal> {
                   label: const Center(child: Text('Profit')),
                   selected: selectedType == .profit,
                   showCheckmark: false,
-                  selectedColor: Colors.greenAccent.withValues(alpha: 0.2),
+                  selectedColor: colors.primary.withValues(alpha: 0.2),
                   onSelected: (selected) {
                     setDialogState(() => selectedType = .profit);
                   },
@@ -199,8 +199,8 @@ class _ListTileSetGoalState extends State<ListTileSetGoal> {
           backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
             if (states.contains(WidgetState.selected)) {
               return selectedType == .budget
-                  ? colors.errorContainer
-                  : Colors.greenAccent.withValues(alpha: 0.2);
+                  ? colors.tertiary
+                  : colors.primary.withValues(alpha: 0.2);
             }
             return null;
           }),
@@ -248,9 +248,7 @@ class _ListTileSetGoalState extends State<ListTileSetGoal> {
     return ListTile(
       leading: Icon(
         Icons.flag,
-        color: _currentGoal?.type == .profit
-            ? Colors.greenAccent
-            : colors.primary,
+        color: _currentGoal?.type == .profit ? colors.primary : colors.tertiary,
       ),
       title: const Text("Set Monthly Goal"),
       subtitle: Text(

@@ -36,7 +36,7 @@ class CustomDayCell extends StatelessWidget {
     }
     final pnlColor = pnl == 0.0
         ? colors.onSurfaceVariant
-        : (isPositive ? Colors.greenAccent : colors.error);
+        : (isPositive ? colors.primary : colors.error);
 
     return Container(
       margin: const .all(4.0),
