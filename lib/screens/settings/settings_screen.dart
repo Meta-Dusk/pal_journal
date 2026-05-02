@@ -62,7 +62,14 @@ class SettingsScreen extends StatelessWidget {
         style: TextStyle(fontWeight: .bold, fontSize: 14),
       ),
       middleSpacer(),
-      const SmartAuthMenu(),
+      Container(
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHigh.withValues(alpha: 0.1),
+          border: .all(color: colors.onSurface.withValues(alpha: 0.3)),
+          borderRadius: .circular(16),
+        ),
+        child: Column(children: [const SmartAuthMenu()]),
+      ),
     ];
 
     final nuclearSettings = [

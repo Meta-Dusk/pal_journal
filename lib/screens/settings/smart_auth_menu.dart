@@ -85,6 +85,7 @@ class ListTileGuestMode extends StatelessWidget {
     }
 
     return ListTile(
+      shape: const RoundedRectangleBorder(borderRadius: .all(.circular(16))),
       leading: Icon(Icons.cloud_off, color: colors.onSurfaceVariant),
       title: const Text("Enable Cloud Sync"),
       subtitle: const Text("Tap to log in or create an account"),

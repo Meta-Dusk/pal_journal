@@ -123,7 +123,9 @@ class _AuthScreenState extends State<AuthScreen> {
           _successMessage = null;
         }),
         child: Text(
-          _isLogin ? "Establish new connection" : "Return to existing node",
+          _isLogin
+              ? "Establish new connection (New Account)"
+              : "Return to existing node (Login)",
           style: TextStyle(color: colors.primary.withValues(alpha: 0.8)),
         ),
       ),
@@ -209,7 +211,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
             )
           : Text(
-              _isLogin ? "Authenticate" : "Create Node",
+              _isLogin ? "Authenticate (Login)" : "Create Node (Register)",
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: .bold,

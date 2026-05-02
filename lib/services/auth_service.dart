@@ -19,14 +19,6 @@ class AuthService {
     if (_auth.currentUser != null && verifyEmail(_auth.currentUser!)) {
       currentUserNotifier.value = _auth.currentUser;
     }
-
-    _auth.authStateChanges().listen((User? user) {
-      if (user != null && verifyEmail(user)) {
-        currentUserNotifier.value = user;
-      } else {
-        currentUserNotifier.value = null;
-      }
-    });
   }
 
   static bool verifyEmail(User user) {
@@ -45,14 +37,16 @@ class AuthService {
         password: password,
       );
 
-      // Send the verification link
-      await cred.user?.sendEmailVerification();
+      try {
+        await cred.user?.sendEmailVerification();
+      } catch (e) {
+        await cred.user?.delete();
+        return "Failed to send verification email. Please try again.";
+      }
 
-      // Immediately sign them out locally so they are
-      // forced to verify before entering
-      await _auth.signOut();
+      currentUserNotifier.value = null;
 
-      return "VERIFICATION_SENT"; // Special flag for our UI
+      return "VERIFICATION_SENT";
     } on FirebaseAuthException catch (e) {
       return e.message;
     } catch (e) {
@@ -69,7 +63,7 @@ class AuthService {
       );
 
       if (!cred.user!.emailVerified) {
-        await _auth.signOut();
+        currentUserNotifier.value = null;
         return "Please verify your email before logging in. Check your inbox!";
       }
 
