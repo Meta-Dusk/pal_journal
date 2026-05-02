@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:pal_journal/services/auth_service.dart';
 
 import 'firebase_options.dart';
 import 'package:pal_journal/screens/main_layout.dart';
@@ -12,6 +13,7 @@ late IsarService isarService;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await AuthService.init();
   isarService = IsarService();
   await ThemeService.init();
   await ThemeService.loadThemeMode();

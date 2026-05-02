@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:pal_journal/screens/auth_screen.dart';
+import 'package:pal_journal/screens/auth/auth_screen.dart';
 import 'package:pal_journal/services/auth_service.dart';
 
 class SmartAuthMenu extends StatelessWidget {
