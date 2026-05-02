@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
-class DashboardHeader extends StatelessWidget {
+class DashboardHeader extends StatefulWidget {
   final double totalAmount;
   final bool isPositive;
 
@@ -12,24 +12,40 @@ class DashboardHeader extends StatelessWidget {
   });
 
   @override
+  State<DashboardHeader> createState() => _DashboardHeaderState();
+}
+
+class _DashboardHeaderState extends State<DashboardHeader>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _gradientController;
+  late Animation<double> _breathingAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _gradientController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _breathingAnimation = CurvedAnimation(
+      parent: _gradientController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _gradientController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
-    final displayAmount = AppFormatters.toCurrency(totalAmount.abs());
-    final sign = isPositive ? "+" : "-";
-    final accentColor = isPositive ? Colors.greenAccent : colors.error;
-
-    final headerContent = [
-      Text(
-        "Lifetime Net PnL",
-        style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        "$sign ₱$displayAmount",
-        style: TextStyle(fontSize: 42, fontWeight: .bold, color: accentColor),
-      ),
-    ];
+    final displayAmount = AppFormatters.toCurrency(widget.totalAmount.abs());
+    final sign = widget.isPositive ? "+" : "-";
+    final accentColor = widget.isPositive ? Colors.greenAccent : colors.error;
 
     return Hero(
       tag: 'lifetime_pnl_card',
@@ -38,30 +54,140 @@ class DashboardHeader extends StatelessWidget {
       },
       child: Material(
         type: .transparency,
-        child: Container(
+        child: animatedCard(
+          colors,
+          accentColor,
+          headerContent(colors, sign, displayAmount, accentColor),
+        ),
+      ),
+    );
+  }
+
+  Column headerContent(
+    ColorScheme colors,
+    String sign,
+    String displayAmount,
+    Color accentColor,
+  ) {
+    final lifetimeNetPnlText = Expanded(
+      child: Column(
+        crossAxisAlignment: .start,
+        children: [
+          Text(
+            "Lifetime Net PnL",
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: .scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "$sign ₱$displayAmount",
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: .bold,
+                color: accentColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            lifetimeNetPnlText,
+            const SizedBox(width: 16),
+            Image.asset(
+              'assets/mascot.png',
+              width: 80,
+              height: 80,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.pets, color: accentColor, size: 40),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Opacity(
+          opacity: 0.0,
+          child: Row(
+            children: [
+              Text(
+                "Tap for detailed analytics",
+                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+              ),
+              const Spacer(),
+              Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  AnimatedBuilder animatedCard(
+    ColorScheme colors,
+    Color accentColor,
+    Column headerContent,
+  ) {
+    return AnimatedBuilder(
+      animation: _breathingAnimation,
+      builder: (context, child) {
+        final alignShift = (_breathingAnimation.value * 0.5) - 0.25;
+
+        return Container(
           width: double.infinity,
           padding: const .all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
+                colors.surfaceContainer,
+                Color.lerp(
+                  colors.surfaceContainer,
+                  accentColor.withValues(alpha: 0.15),
+                  _breathingAnimation.value,
+                )!,
                 colors.surfaceContainerHighest,
-                colors.surfaceContainerHighest.withValues(alpha: 0.7),
               ],
-              begin: .topLeft,
-              end: .bottomRight,
+              begin: Alignment(alignShift - 1.0, -1.0),
+              end: Alignment(alignShift + 1.0, 1.0),
             ),
             borderRadius: .circular(24),
-            border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
-          ),
-          child: SingleChildScrollView(
-            physics: const NeverScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: .start,
-              mainAxisSize: .min,
-              children: headerContent,
+            border: Border.all(
+              color: accentColor.withValues(alpha: 0.3),
+              width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(
+                  alpha: 0.05 + (_breathingAnimation.value * 0.05),
+                ),
+                blurRadius: 20 + (_breathingAnimation.value * 10),
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-        ),
+          child: child,
+        );
+      },
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: headerContent,
       ),
     );
   }
