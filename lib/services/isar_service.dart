@@ -51,17 +51,31 @@ class IsarService {
     });
   }
 
-  /// Method to reset/delete data for a specific day
+  /// Deletes a PnL entry for a specific date.
   Future<void> deletePnLForDate(DateTime date) async {
     final isar = await db;
-    final normalizedDate = DateTime.utc(date.year, date.month, date.day);
+
+    // The exact first microsecond of the selected day
+    final startOfDay = DateTime(date.year, date.month, date.day);
+
+    // Go to the NEXT day, and subtract to perfectly capture 23:59:59.999
+    final endOfDay = DateTime(
+      date.year,
+      date.month,
+      date.day + 1,
+    ).subtract(const Duration(microseconds: 1));
 
     await isar.writeTxn(() async {
-      await isar
+      // Find the entry that falls anywhere within this 24-hour window
+      final entryToDelete = await isar
           .collection<PnLEntry>()
           .filter()
-          .dateEqualTo(normalizedDate)
-          .deleteAll();
+          .dateBetween(startOfDay, endOfDay)
+          .findFirst();
+
+      // If we caught it, delete it by its exact ID
+      if (entryToDelete == null) return;
+      await isar.collection<PnLEntry>().delete(entryToDelete.id);
     });
   }
 

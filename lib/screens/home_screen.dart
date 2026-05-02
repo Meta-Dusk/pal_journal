@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:pal_journal/main.dart';
-import 'package:pal_journal/screens/dashboard_screen.dart';
+import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,13 +11,34 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   double _lifetimePnL = 0.0;
+
+  late AnimationController _gradientController;
+  late Animation<double> _breathingAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadLifetimeData();
+
+    // Initialize the breathing animation
+    _gradientController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _breathingAnimation = CurvedAnimation(
+      parent: _gradientController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _gradientController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLifetimeData() async {
@@ -29,14 +50,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final isPositive = _lifetimePnL >= 0;
     final displayAmount = AppFormatters.toCurrency(_lifetimePnL.abs());
     final sign = isPositive ? "+" : "-";
-    final accentColor = isPositive ? Colors.tealAccent : Colors.redAccent;
+    final accentColor = isPositive ? Colors.greenAccent : colors.error;
 
-    final gestureDetector = GestureDetector(
+    // --- THE ANIMATED CARD ---
+    final hero = Hero(
+      tag: 'lifetime_pnl_card',
+      placeholderBuilder: (context, heroSize, child) {
+        return Opacity(opacity: 0.0, child: child);
+      },
+      child: Material(
+        type: .transparency,
+        child: animatedCard(colors, accentColor, sign, displayAmount),
+      ),
+    );
+
+    final heroTransitionHandler = GestureDetector(
       onTap: () async {
-        // Navigate to the Dashboard
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -46,73 +79,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
-        // Refresh data when we come back, just in case
         _loadLifetimeData();
       },
-      child: Hero(
-        tag: 'lifetime_pnl_card',
-        // Material is required inside Hero to prevent text rendering glitches
-        child: Material(
-          type: .transparency,
-          child: Container(
-            width: double.infinity,
-            padding: const .all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [const Color(0xFF1E1E1E), const Color(0xFF2A2A2A)],
-                begin: .topLeft,
-                end: .bottomRight,
-              ),
-              borderRadius: .circular(24),
-              border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: .start,
-                mainAxisSize: .min,
-                children: [
-                  const Text(
-                    "Lifetime Net PnL",
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "$sign ₱$displayAmount",
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: .bold,
-                      color: accentColor,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Text(
-                        "Tap for detailed analytics",
-                        style: TextStyle(color: Colors.white54, fontSize: 12),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: accentColor,
-                        size: 14,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      child: hero,
     );
 
     return SingleChildScrollView(
@@ -122,20 +91,144 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: .start,
           children: [
-            const Text(
+            Text(
               "Overview",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: .bold,
-                color: Colors.white,
+                color: colors.onSurface,
               ),
             ),
             const SizedBox(height: 24),
-
-            // The Hero Widget connects this card to the Dashboard
-            gestureDetector,
+            heroTransitionHandler,
           ],
         ),
+      ),
+    );
+  }
+
+  AnimatedBuilder animatedCard(
+    ColorScheme colors,
+    Color accentColor,
+    String sign,
+    String displayAmount,
+  ) {
+    return AnimatedBuilder(
+      animation: _breathingAnimation,
+      builder: (context, child) {
+        // Calculate a slight alignment shift to make the gradient "sweep"
+        final alignShift = (_breathingAnimation.value * 0.5) - 0.25;
+
+        return Container(
+          width: double.infinity,
+          padding: const .all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                colors.surfaceContainer,
+                Color.lerp(
+                  colors.surfaceContainer,
+                  accentColor.withValues(alpha: 0.15),
+                  _breathingAnimation.value,
+                )!,
+                colors.surfaceContainerHighest,
+              ],
+              begin: Alignment(alignShift - 1.0, -1.0),
+              end: Alignment(alignShift + 1.0, 1.0),
+            ),
+            borderRadius: .circular(24),
+            border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(
+                  alpha: 0.05 + (_breathingAnimation.value * 0.05),
+                ),
+                blurRadius: 20 + (_breathingAnimation.value * 10),
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: lifetimeNetPnlView(colors, sign, displayAmount, accentColor),
+    );
+  }
+
+  SingleChildScrollView lifetimeNetPnlView(
+    ColorScheme colors,
+    String sign,
+    String displayAmount,
+    Color accentColor,
+  ) {
+    final mainContent = [
+      // Left Side: The Text
+      Expanded(
+        child: Column(
+          crossAxisAlignment: .start,
+          children: [
+            Text(
+              "Lifetime Net PnL",
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            // FittedBox ensures giant numbers shrink dynamically
+            FittedBox(
+              fit: .scaleDown,
+              alignment: .centerLeft,
+              child: Text(
+                "$sign ₱$displayAmount",
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: .bold,
+                  color: accentColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(width: 16),
+
+      // Right Side: The Mascot
+      Image.asset(
+        'assets/mascot.png',
+        width: 80,
+        height: 80,
+        fit: .contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.pets, color: accentColor, size: 40),
+          );
+        },
+      ),
+    ];
+
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: .start,
+        mainAxisSize: .min,
+        children: [
+          Row(crossAxisAlignment: .center, children: mainContent),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Text(
+                "Tap for detailed analytics",
+                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+              ),
+              const Spacer(),
+              Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
+            ],
+          ),
+        ],
       ),
     );
   }

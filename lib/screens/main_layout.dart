@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pal_journal/screens/home_screen.dart';
 import 'package:pal_journal/components/pnl_calendar/pnl_calendar.dart';
+import 'package:pal_journal/screens/settings_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -11,8 +12,6 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
-
-  // NEW: The controller that handles the sliding animation
   late PageController _pageController;
 
   @override
@@ -24,17 +23,33 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   void dispose() {
-    // Always dispose controllers to prevent memory leaks!
     _pageController.dispose();
     super.dispose();
   }
 
-  final List<Widget> _screens = [const HomeScreen(), const PnLCalendar()];
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const PnLCalendar(),
+    const SettingsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    final navBarItems = const [
+      BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.calendar_month),
+        label: "Calendar",
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.settings_applications),
+        label: "Settings",
+      ),
+    ];
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
       body: SafeArea(
         child: PageView(
           controller: _pageController,
@@ -49,9 +64,9 @@ class _MainLayoutState extends State<MainLayout> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF1E1E1E),
-        selectedItemColor: Colors.tealAccent,
-        unselectedItemColor: Colors.grey,
+        backgroundColor: colors.surfaceContainer,
+        selectedItemColor: colors.primary,
+        unselectedItemColor: colors.onSurfaceVariant,
         currentIndex: _currentIndex,
         onTap: (index) {
           // Updates the state and animates the page simultaneously
@@ -66,13 +81,7 @@ class _MainLayoutState extends State<MainLayout> {
             curve: Curves.easeInOut,
           );
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: "Calendar",
-          ),
-        ],
+        items: navBarItems,
       ),
     );
   }

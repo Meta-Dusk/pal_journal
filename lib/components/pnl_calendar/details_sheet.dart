@@ -17,6 +17,7 @@ class DetailsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final formattedDate = DateFormat('MMMM d, yyyy').format(day);
 
     return SingleChildScrollView(
@@ -27,46 +28,44 @@ class DetailsSheet extends StatelessWidget {
         children: [
           Text(
             formattedDate,
-            style: const TextStyle(color: Colors.grey, fontSize: 16),
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
             entry != null
                 ? "₱ ${AppFormatters.toCurrency(entry!.amount)}"
                 : "No Data",
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: .bold,
-              color: Colors.white,
-            ),
+            style: const TextStyle(fontSize: 32, fontWeight: .bold),
           ),
           if (entry?.note != null && entry!.note!.isNotEmpty) ...[
             const SizedBox(height: 16),
             Container(
               padding: const .all(12),
               decoration: BoxDecoration(
-                color: Colors.white10,
+                color: colors.surfaceContainerHighest,
                 borderRadius: .circular(8),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.sticky_note_2, color: Colors.grey, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      entry!.note!,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
+                  Icon(
+                    Icons.sticky_note_2,
+                    color: colors.onSurfaceVariant,
+                    size: 16,
                   ),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(entry!.note!)),
                 ],
               ),
             ),
           ],
           if (entry?.breakdown != null && entry!.breakdown!.isNotEmpty) ...[
             const SizedBox(height: 16),
-            const Text(
+            Text(
               "Breakdown",
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontWeight: .bold,
+              ),
             ),
             const SizedBox(height: 8),
             ...entry!.breakdown!.map(
@@ -75,14 +74,8 @@ class DetailsSheet extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: .spaceBetween,
                   children: [
-                    Text(
-                      item.category ?? "Unknown",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    Text(
-                      "₱ ${item.amount?.toStringAsFixed(2) ?? '0.00'}",
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                    Text(item.category ?? "Unknown"),
+                    Text("₱ ${item.amount?.toStringAsFixed(2) ?? '0.00'}"),
                   ],
                 ),
               ),
@@ -96,8 +89,8 @@ class DetailsSheet extends StatelessWidget {
               icon: const Icon(Icons.edit),
               label: const Text("Edit Day"),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.tealAccent.shade700,
-                foregroundColor: Colors.black,
+                backgroundColor: colors.primaryContainer,
+                foregroundColor: colors.onPrimaryContainer,
                 padding: const .symmetric(vertical: 16),
               ),
             ),

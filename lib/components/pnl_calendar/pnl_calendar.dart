@@ -3,12 +3,11 @@ import 'package:isar/isar.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
+import 'package:pal_journal/services/goal_service.dart';
+import 'package:pal_journal/utils/formatters.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/main.dart';
-import 'custom_day_cell.dart';
-import 'details_sheet.dart';
-import 'edit_sheet.dart';
-import 'month_settings_dialog.dart';
+import 'subcomponents/calendar_components.dart';
 
 class PnLCalendar extends StatefulWidget {
   const PnLCalendar({super.key});
@@ -21,12 +20,40 @@ class _PnLCalendarState extends State<PnLCalendar> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, PnLEntry> _dailyEntries = {};
+  GoalData? _currentMonthGoal;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
+    _loadMonthGoal(_focusedDay);
     _loadPnLData();
+  }
+
+  /// Smarter calculation that respects the current focused month and goal type
+  double _calculateMonthlyProgress() {
+    if (_currentMonthGoal == null) return 0.0;
+    double total = 0.0;
+
+    for (var entry in _dailyEntries.values) {
+      // FIX 1: Only check entries belonging to the currently viewed month!
+      if (entry.date.year == _focusedDay.year &&
+          entry.date.month == _focusedDay.month) {
+        if (_currentMonthGoal!.type == .budget && entry.amount < 0) {
+          // Budgets sum up losses (absolute value)
+          total += entry.amount.abs();
+        } else if (_currentMonthGoal!.type == .profit) {
+          // Profit goals sum up Net PnL (combining wins and losses)
+          total += entry.amount;
+        }
+      }
+    }
+    return total;
+  }
+
+  Future<void> _loadMonthGoal(DateTime month) async {
+    final goal = await GoalService.getGoal(month);
+    setState(() => _currentMonthGoal = goal);
   }
 
   Future<void> _loadPnLData() async {
@@ -59,7 +86,6 @@ class _PnLCalendarState extends State<PnLCalendar> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
       shape: const RoundedRectangleBorder(
         borderRadius: .vertical(top: .circular(20)),
       ),
@@ -81,7 +107,6 @@ class _PnLCalendarState extends State<PnLCalendar> {
     final bool? didDataChange = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E1E),
       shape: const RoundedRectangleBorder(
         borderRadius: .vertical(top: .circular(20)),
       ),
@@ -100,25 +125,18 @@ class _PnLCalendarState extends State<PnLCalendar> {
       _focusedDay,
     );
 
-    if (shouldClearMonth == true) {
-      await isarService.deletePnLForMonth(_focusedDay);
-      await _loadPnLData();
+    await _loadMonthGoal(_focusedDay);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Month data cleared."),
-            backgroundColor: Colors.redAccent,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+    if (shouldClearMonth == true) {
+      await _loadPnLData();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return TableCalendar(
+    final colors = Theme.of(context).colorScheme;
+
+    final tableCalendar = TableCalendar(
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2030, 12, 31),
       focusedDay: _focusedDay,
@@ -143,38 +161,39 @@ class _PnLCalendarState extends State<PnLCalendar> {
       onPageChanged: (focusedDay) {
         setState(() {
           _focusedDay = focusedDay;
+          _loadMonthGoal(focusedDay);
         });
       },
 
-      headerStyle: const HeaderStyle(
+      headerStyle: HeaderStyle(
         formatButtonVisible: false,
         titleCentered: false,
-        leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
-        rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18),
+        leftChevronIcon: Icon(Icons.chevron_left, color: colors.onSurface),
+        rightChevronIcon: Icon(Icons.chevron_right, color: colors.onSurface),
+        titleTextStyle: TextStyle(fontSize: 18, color: colors.onSurface),
       ),
-      daysOfWeekStyle: const DaysOfWeekStyle(
-        weekdayStyle: TextStyle(color: Colors.grey),
-        weekendStyle: TextStyle(color: Colors.grey),
+      daysOfWeekStyle: DaysOfWeekStyle(
+        weekdayStyle: TextStyle(color: colors.onSurfaceVariant),
+        weekendStyle: TextStyle(color: colors.onSurfaceVariant),
       ),
       calendarBuilders: CalendarBuilders(
         headerTitleBuilder: (context, day) {
           final monthText = DateFormat('yMMMM').format(day);
           return Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: .min,
             children: [
               Text(
                 monthText,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colors.onSurface,
                   fontSize: 18,
                   fontWeight: .bold,
                 ),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.settings_outlined,
-                  color: Colors.grey,
+                  color: colors.onSurfaceVariant,
                   size: 20,
                 ),
                 onPressed: _openMonthSettings,
@@ -195,9 +214,109 @@ class _PnLCalendarState extends State<PnLCalendar> {
         outsideBuilder: (context, day, focusedDay) => Center(
           child: Text(
             '${day.day}',
-            style: const TextStyle(color: Colors.white24),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.3)),
           ),
         ),
+      ),
+    );
+
+    return Column(
+      children: [
+        tableCalendar,
+        if (_currentMonthGoal != null) ...[
+          const SizedBox(height: 16),
+          buildMonthlyGoalIndicator(colors),
+        ],
+      ],
+    );
+  }
+
+  Widget buildMonthlyGoalIndicator(ColorScheme colors) {
+    if (_currentMonthGoal == null) return const SizedBox.shrink();
+
+    final target = _currentMonthGoal!.amount;
+    final isBudget = _currentMonthGoal!.type == .budget;
+
+    // We get the specific calculated value based on the Goal Type
+    final currentValue = _calculateMonthlyProgress();
+
+    double progress;
+    bool isOverBudget = false;
+    bool isGoalMet = false;
+    Color barColor;
+    String label;
+
+    if (isBudget) {
+      label = "Monthly Budget";
+      progress = target > 0 ? (currentValue / target).clamp(0.0, 1.0) : 0.0;
+      isOverBudget = currentValue > target;
+      barColor = isOverBudget ? colors.error : colors.primary;
+    } else {
+      label = "Profit Target";
+      progress = target > 0 ? (currentValue / target).clamp(0.0, 1.0) : 0.0;
+      // If currentValue is negative (they are at a net loss), progress is 0.
+      if (currentValue < 0) progress = 0.0;
+      isGoalMet = currentValue >= target;
+      barColor = isGoalMet ? Colors.greenAccent : colors.primary;
+    }
+
+    final mainContent = [
+      Row(
+        mainAxisAlignment: .spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isBudget ? Icons.money_off : Icons.trending_up,
+                color: barColor,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(label, style: TextStyle(color: colors.onSurfaceVariant)),
+            ],
+          ),
+          Text(
+            "₱${AppFormatters.toCurrency(currentValue)} "
+            "/ ₱${AppFormatters.toCurrency(target)}",
+            style: TextStyle(color: barColor, fontWeight: .bold, fontSize: 14),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      ClipRRect(
+        borderRadius: .circular(8),
+        child: LinearProgressIndicator(
+          value: progress,
+          minHeight: 8,
+          backgroundColor: colors.surfaceContainerHighest,
+          valueColor: AlwaysStoppedAnimation<Color>(barColor),
+        ),
+      ),
+      if (isOverBudget) ...[
+        const SizedBox(height: 8),
+        Text(
+          "You have exceeded your monthly budget!",
+          style: TextStyle(color: colors.error, fontSize: 12),
+        ),
+      ] else if (isGoalMet) ...[
+        const SizedBox(height: 8),
+        Text(
+          "You hit your profit target! Awesome!",
+          style: TextStyle(color: Colors.greenAccent, fontSize: 12),
+        ),
+      ],
+    ];
+
+    return Padding(
+      padding: const .symmetric(horizontal: 16.0),
+      child: Container(
+        padding: const .all(16),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainer,
+          borderRadius: .circular(16),
+          border: .all(color: barColor.withValues(alpha: 0.3)),
+        ),
+        child: Column(crossAxisAlignment: .start, children: mainContent),
       ),
     );
   }
