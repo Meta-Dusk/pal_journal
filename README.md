@@ -8,7 +8,6 @@ The name "**PAL: Journal**" simply comes from the term used in investments or fi
 Below are some previews of the app in action.
 
 **Pending Preview**
-_Preview for v0.5.0_
 
 ## Supported Platforms
 
@@ -18,8 +17,8 @@ The plan for this app, is to be able to support both mobile (**Android**) and de
 | -------- | ------- | ------- |
 | **Android** | ✅ Fully supported! | From v0.2.0+ |
 | **IOS** | 🟥 Not supported. | - |
-| **Windows** | ✅ Fully supported! | From v0.1.0+ |
-| **MacOS** | 🟧 Not yet tested. | - |
+| **Windows** | 🟨 Partially supported | From v0.1.0+ |
+| **MacOS** | 🟥 Not supported. | - |
 | **Linux** | 🟧 Not yet tested. | - |
 
 ## Feature List
@@ -37,6 +36,7 @@ The plan for this app, is to be able to support both mobile (**Android**) and de
 | **Zero-Based Reconciliation** | Advanced daily ledgers that automatically balance categorized transaction breakdowns into a unified daily net total. <br><br> _Simply put: You can log every detail of your day's income and expenses, and the app will automatically do the math to ensure everything balances perfectly._ | v0.6.0 |
 | **Granular Category Tracking** | Isolated trend analysis for specific cash flow streams. <br><br> _Simply put: Want to see exactly how much you spend on "Food" over the entire year? This will let you filter and track specific tags._ | v0.7.0 |
 | **Real-Time Forex Conversion** | Automated currency localization for international tracking. <br><br> _Simply put: Traveling or getting paid in a different currency? The app will automatically convert it to your main currency._ | v0.8.0 |
+| **Cloud Ledger Sync** (_Mobile Only Feature_) | Cross-platform data synchronization via authenticated accounts. <br><br> _Simply put: Log in to automatically back up your data and seamlessly access it on your phone._ | v0.10.0 |
 
 ## Setup / Installation
 
@@ -49,4 +49,8 @@ Pending features below are yet to be implemented. As soon as they are implemente
 
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
-| **Cloud Ledger Sync** | Cross-platform data synchronization via authenticated accounts. <br><br> _Simply put: Log in to automatically back up your data and seamlessly access it on both your phone and PC._ | 🟥 Progress => 0% |
+| | | |
+
+## Issues
+
+1. The **Cloud Ledger Sync**, or cloud-based data syncing, only works for mobile (Android). Alternative solutions for this on PC (Windows), would be to just use the CSV tools (export then import).
