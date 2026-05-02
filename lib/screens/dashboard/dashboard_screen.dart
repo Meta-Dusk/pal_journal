@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:pal_journal/models/pnl_entry.dart';
-import 'package:pal_journal/main.dart';
-import 'package:pal_journal/screens/dashboard/dashboard_skeleton.dart';
-import 'package:pal_journal/utils/formatters.dart';
 import 'package:intl/intl.dart';
 
-import 'dashboard_header.dart';
-import 'dynamic_trend_chart.dart';
-import 'category_breakdown_chart.dart';
+import 'package:pal_journal/main.dart';
+import 'package:pal_journal/models/pnl_entry.dart';
+import 'package:pal_journal/services/goal_service.dart';
+import 'subcomponents/components.dart';
 
 class DashboardScreen extends StatefulWidget {
   final double totalAmount;
@@ -27,6 +24,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<PnLEntry> _recentEntries = [];
   bool _isLoading = true;
+  GoalData? _monthlyGoal;
 
   String _selectedFilter = '7D';
   late DateTime _startDate;
@@ -68,14 +66,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       start = now.subtract(const Duration(days: 30));
     } else if (filter == 'MTD') {
       start = DateTime(now.year, now.month, 1);
+      // Push end to the exact last microsecond of the current month
+      end = DateTime(
+        now.year,
+        now.month + 1,
+        1,
+      ).subtract(const Duration(microseconds: 1));
     } else if (filter == 'YTD') {
       start = DateTime(now.year, 1, 1);
+      // YTD should also go to the absolute end of the current day
+      end = DateTime(
+        now.year,
+        now.month,
+        now.day + 1,
+      ).subtract(const Duration(microseconds: 1));
     } else {
       // Custom Date Range Picker
       final picked = await showDateRangePicker(
         context: context,
-        firstDate: DateTime(2020),
-        lastDate: now,
+        firstDate: now.subtract(const Duration(days: 365)),
+        lastDate: now.add(const Duration(days: 365)),
+        initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
         builder: (context, child) {
           return Theme(
             data: Theme.of(
@@ -94,10 +105,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     }
 
+    GoalData? goal;
+    if (filter == 'MTD') {
+      goal = await GoalService.getGoal(start);
+    }
+
     setState(() {
       _selectedFilter = filter;
       _startDate = start;
       _endDate = end;
+      _monthlyGoal = goal;
       _isLoading = true;
     });
 
@@ -220,41 +237,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       const SizedBox(height: 24),
 
       // --- QUICK INSIGHTS CARDS ---
-      Row(
-        children: [
-          _buildInsightCard(
-            "Daily Avg",
-            "₱${AppFormatters.toCurrency(insights['avg'])}",
-            Icons.show_chart,
-            colors,
-          ),
-          const SizedBox(width: 12),
-          _buildInsightCard(
-            "Top Expense",
-            insights['topCat'],
-            Icons.shopping_bag_outlined,
-            colors,
-          ),
-        ],
-      ),
-      const SizedBox(height: 12),
-      Row(
-        children: [
-          _buildInsightCard(
-            "Max Loss in a Day",
-            "₱${AppFormatters.toCurrency(insights['maxLoss'])}",
-            Icons.warning_amber_rounded,
-            colors,
-            isDanger: true,
-          ),
-          const SizedBox(width: 12),
-          _buildInsightCard(
-            "Entries",
-            "${_recentEntries.length}",
-            Icons.receipt_long,
-            colors,
-          ),
-        ],
+      QuickInsightsGrid(
+        insights: insights,
+        selectedFilter: _selectedFilter,
+        monthlyGoal: _monthlyGoal,
+        entryCount: _recentEntries.length,
       ),
       const SizedBox(height: 32),
 
@@ -295,57 +282,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Padding(
           padding: const .symmetric(horizontal: 24.0),
           child: Column(crossAxisAlignment: .start, children: mainContent),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInsightCard(
-    String title,
-    String value,
-    IconData icon,
-    ColorScheme colors, {
-    bool isDanger = false,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const .all(16),
-        decoration: BoxDecoration(
-          color: colors.surfaceContainer,
-          borderRadius: .circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: .start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 16,
-                  color: isDanger ? colors.error : colors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: colors.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                color: isDanger ? colors.error : colors.onSurface,
-                fontSize: 16,
-                fontWeight: .bold,
-              ),
-              maxLines: 1,
-              overflow: .ellipsis,
-            ),
-          ],
         ),
       ),
     );

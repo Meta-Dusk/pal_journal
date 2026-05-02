@@ -8,7 +8,7 @@ The name "**PAL: Journal**" simply comes from the term used in investments or fi
 Below are some previews of the app in action.
 
 **Pending Preview**
-_Preview for v0.3.0_
+_Preview for v0.5.0_
 
 ## Supported Platforms
 
@@ -17,10 +17,10 @@ The plan for this app, is to be able to support both mobile (**Android**) and de
 | Platform | Support | Version |
 | -------- | ------- | ------- |
 | **Android** | ✅ Fully supported! | From v0.2.0+ |
-| **IOS** | 🟥 Not supported. | |
+| **IOS** | 🟥 Not supported. | - |
 | **Windows** | ✅ Fully supported! | From v0.1.0+ |
-| **MacOS** | 🟧 Not yet tested. | |
-| **Linux** | 🟧 Not yet tested. | |
+| **MacOS** | 🟧 Not yet tested. | - |
+| **Linux** | 🟧 Not yet tested. | - |
 
 ## Feature List
 
@@ -33,6 +33,7 @@ The plan for this app, is to be able to support both mobile (**Android**) and de
 | **Settings** | Additional settings (global) for the app. | v0.2.0 |
 | **Customizable Themes** | The app uses a Material 3 design scheme to easily change theme schemes on the go. | v0.3.0 |
 | **Dashboard Settings** | Filters and other settings for the dashboard. | v0.4.0 |
+| **Monthly Goals** | You can set goals for certain conditions per month. | v0.5.0 |
 
 ## Setup / Installation
 
@@ -46,4 +47,3 @@ Pending features below are yet to be implemented. As soon as they are implemente
 | Feature | Description | Status |
 | ------- | ----------- | ------ |
 | **Data Syncing** | Optional account creation for data syncing across all devices. | 🟥 Progress => 0% |
-| **Dashboard Settings** | Filters and other settings for the dashboard. | ✅ Progress => 100% |
