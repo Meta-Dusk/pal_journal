@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 
+import 'firebase_options.dart';
 import 'package:pal_journal/screens/main_layout.dart';
 import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
@@ -9,6 +11,7 @@ late IsarService isarService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   isarService = IsarService();
   await ThemeService.init();
   await ThemeService.loadThemeMode();

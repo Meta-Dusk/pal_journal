@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import './subcomponents/list_tiles.dart';
+import 'smart_auth_menu.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -13,7 +14,7 @@ class SettingsScreen extends StatelessWidget {
         "Appearance",
         style: TextStyle(fontWeight: .bold, fontSize: 14),
       ),
-      middlePadding(),
+      middleSpacer(),
       Container(
         decoration: BoxDecoration(
           color: colors.surfaceContainerHigh.withValues(alpha: 0.1),
@@ -38,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
         "Data Management",
         style: TextStyle(fontWeight: .bold, fontSize: 14),
       ),
-      middlePadding(),
+      middleSpacer(),
       Container(
         decoration: BoxDecoration(
           color: colors.surfaceContainerHigh.withValues(alpha: 0.1),
@@ -55,6 +56,15 @@ class SettingsScreen extends StatelessWidget {
       ),
     ];
 
+    final cloudSyncSettings = [
+      const Text(
+        "Cloud Sync",
+        style: TextStyle(fontWeight: .bold, fontSize: 14),
+      ),
+      middleSpacer(),
+      const SmartAuthMenu(),
+    ];
+
     final nuclearSettings = [
       Text(
         "Danger Zone",
@@ -65,7 +75,7 @@ class SettingsScreen extends StatelessWidget {
           letterSpacing: 1.2,
         ),
       ),
-      middlePadding(),
+      middleSpacer(),
 
       Container(
         decoration: BoxDecoration(
@@ -88,6 +98,8 @@ class SettingsScreen extends StatelessWidget {
       bottomPadding(),
       ...dataManagementSettings,
       bottomPadding(),
+      ...cloudSyncSettings,
+      bottomPadding(),
       const Divider(),
       const SizedBox(height: 16),
       ...nuclearSettings,
@@ -105,5 +117,5 @@ class SettingsScreen extends StatelessWidget {
   }
 
   SizedBox bottomPadding() => const SizedBox(height: 32);
-  SizedBox middlePadding() => const SizedBox(height: 8);
+  SizedBox middleSpacer() => const SizedBox(height: 8);
 }
