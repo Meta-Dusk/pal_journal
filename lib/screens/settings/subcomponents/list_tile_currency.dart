@@ -4,15 +4,6 @@ import 'package:pal_journal/services/currency_service.dart';
 class ListTileCurrency extends StatelessWidget {
   const ListTileCurrency({super.key});
 
-  void _showCurrencyDialog(BuildContext context, String currentCurrency) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return CurrencyDialog(currentCurrency: currentCurrency);
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -21,7 +12,6 @@ class ListTileCurrency extends StatelessWidget {
       valueListenable: CurrencyService.targetCurrencyNotifier,
       builder: (context, currentCurrency, child) {
         return ListTile(
-          shape: RoundedRectangleBorder(borderRadius: .circular(12)),
           tileColor: colors.surfaceContainer,
           leading: Icon(Icons.currency_exchange, color: colors.primary),
           title: const Text("Display Currency"),
@@ -35,6 +25,15 @@ class ListTileCurrency extends StatelessWidget {
           ),
           onTap: () => _showCurrencyDialog(context, currentCurrency),
         );
+      },
+    );
+  }
+
+  void _showCurrencyDialog(BuildContext context, String currentCurrency) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return CurrencyDialog(currentCurrency: currentCurrency);
       },
     );
   }

@@ -4,17 +4,6 @@ import 'package:pal_journal/services/theme_service.dart';
 class ListTileThemeMode extends StatelessWidget {
   const ListTileThemeMode({super.key});
 
-  void _showThemeDialog(BuildContext context, ThemeMode currentMode) {
-    final colors = Theme.of(context).colorScheme;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return ThemeModeDialog(colors: colors, themeMode: currentMode);
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -34,7 +23,9 @@ class ListTileThemeMode extends StatelessWidget {
         }
 
         return ListTile(
-          shape: RoundedRectangleBorder(borderRadius: .circular(12)),
+          shape: const RoundedRectangleBorder(
+            borderRadius: .vertical(top: .circular(16)),
+          ),
           tileColor: colors.surfaceContainer,
           leading: Icon(modeIcon, color: colors.primary),
           title: const Text("App Theme"),
@@ -53,6 +44,17 @@ class ListTileThemeMode extends StatelessWidget {
       },
     );
   }
+
+  void _showThemeDialog(BuildContext context, ThemeMode currentMode) {
+    final colors = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ThemeModeDialog(colors: colors, themeMode: currentMode);
+      },
+    );
+  }
 }
 
 class ThemeModeDialog extends StatelessWidget {
@@ -67,6 +69,27 @@ class ThemeModeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final listTileColumn = Column(
+      mainAxisSize: .min,
+      children: [
+        RadioListTile<ThemeMode>(
+          title: const Text("System Default"),
+          value: .system,
+          activeColor: colors.primary,
+        ),
+        RadioListTile<ThemeMode>(
+          title: const Text("Light Mode"),
+          value: .light,
+          activeColor: colors.primary,
+        ),
+        RadioListTile<ThemeMode>(
+          title: const Text("Dark Mode"),
+          value: .dark,
+          activeColor: colors.primary,
+        ),
+      ],
+    );
+
     return AlertDialog(
       title: const Text("App Theme"),
       contentPadding: const .only(top: 12, bottom: 24),
@@ -76,26 +99,7 @@ class ThemeModeDialog extends StatelessWidget {
           if (mode != null) ThemeService.updateThemeMode(mode);
           Navigator.pop(context);
         },
-        child: Column(
-          mainAxisSize: .min,
-          children: [
-            RadioListTile<ThemeMode>(
-              title: const Text("System Default"),
-              value: .system,
-              activeColor: colors.primary,
-            ),
-            RadioListTile<ThemeMode>(
-              title: const Text("Light Mode"),
-              value: .light,
-              activeColor: colors.primary,
-            ),
-            RadioListTile<ThemeMode>(
-              title: const Text("Dark Mode"),
-              value: .dark,
-              activeColor: colors.primary,
-            ),
-          ],
-        ),
+        child: listTileColumn,
       ),
     );
   }

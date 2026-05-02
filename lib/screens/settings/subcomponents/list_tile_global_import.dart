@@ -10,7 +10,9 @@ class ListTileGlobalImport extends StatelessWidget {
 
     return ListTile(
       tileColor: colors.surfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: .circular(12)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: .vertical(bottom: .circular(16)),
+      ),
       leading: Icon(Icons.restore, color: colors.primary),
       title: const Text("Restore Data (CSV)"),
       subtitle: const Text(
