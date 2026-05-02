@@ -27,6 +27,7 @@ class SettingsScreen extends StatelessWidget {
           const ListTileThemeColor(),
           const SizedBox(height: 12),
           const ListTileCurrency(),
+          const ListTileExchangeRates(),
           const SizedBox(height: 32),
 
           const Text(
