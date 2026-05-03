@@ -6,3 +6,5 @@ export 'list_tile_reset_prefs.dart';
 export 'list_tile_theme_mode.dart';
 export 'list_tile_currency.dart';
 export 'list_tile_exchange_rates.dart';
+export 'list_tile_goals_export.dart';
+export 'list_tile_goals_import.dart';

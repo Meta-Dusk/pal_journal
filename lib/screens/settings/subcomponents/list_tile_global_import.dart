@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/services/csv_service.dart';
+import 'package:pal_journal/services/csv/csv_service.dart';
 
 class ListTileGlobalImport extends StatelessWidget {
   const ListTileGlobalImport({super.key});
@@ -10,9 +10,6 @@ class ListTileGlobalImport extends StatelessWidget {
 
     return ListTile(
       tileColor: colors.surfaceContainer,
-      shape: const RoundedRectangleBorder(
-        borderRadius: .vertical(bottom: .circular(16)),
-      ),
       leading: Icon(Icons.restore, color: colors.primary),
       title: const Text("Restore Data (CSV)"),
       subtitle: const Text(

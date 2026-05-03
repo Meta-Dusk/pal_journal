@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:pal_journal/services/currency_service.dart';
-import 'package:pal_journal/services/goal_service.dart';
+import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
 class ListTileSetGoal extends StatefulWidget {
@@ -12,7 +13,7 @@ class ListTileSetGoal extends StatefulWidget {
 }
 
 class _ListTileSetGoalState extends State<ListTileSetGoal> {
-  GoalData? _currentGoal;
+  MonthlyGoal? _currentGoal;
   final symbol = CurrencyService.symbol;
 
   @override
@@ -22,7 +23,7 @@ class _ListTileSetGoalState extends State<ListTileSetGoal> {
   }
 
   Future<void> _fetchGoal() async {
-    final goal = await GoalService.getGoal(widget.month);
+    final goal = await IsarService().getGoal(widget.month);
     setState(() => _currentGoal = goal);
   }
 
@@ -37,107 +38,125 @@ class _ListTileSetGoalState extends State<ListTileSetGoal> {
       context: context,
       builder: (context) {
         // StatefulBuilder ensures the chips update visually when tapped!
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final dialogContent = [
-              Expanded(
-                child: ChoiceChip(
-                  label: const Center(child: Text('Budget')),
-                  selected: selectedType == .budget,
-                  showCheckmark: false,
-                  selectedColor: colors.errorContainer,
-                  onSelected: (selected) {
-                    setDialogState(() => selectedType = .budget);
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ChoiceChip(
-                  label: const Center(child: Text('Profit')),
-                  selected: selectedType == .profit,
-                  showCheckmark: false,
-                  selectedColor: colors.primary.withValues(alpha: 0.2),
-                  onSelected: (selected) {
-                    setDialogState(() => selectedType = .profit);
-                  },
-                ),
-              ),
-            ];
+        return statefulBuilder(selectedType, colors, controller);
+      },
+    );
+  }
 
-            return AlertDialog(
-              title: const Text("Set Monthly Goal", textAlign: .center),
-              content: Column(
-                mainAxisSize: .min,
-                children: [
-                  Row(children: dialogContent),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    keyboardType: const .numberWithOptions(decimal: true),
-                    inputFormatters: [PnLFormatter()],
-                    decoration: InputDecoration(
-                      hintText: "0.00",
-                      prefixText: "$symbol ",
-                      filled: true,
-                      fillColor: colors.surfaceContainerHighest,
-                      border: OutlineInputBorder(
-                        borderRadius: .circular(12),
-                        borderSide: .none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                if (_currentGoal != null)
-                  TextButton(
-                    onPressed: () async {
-                      await GoalService.clearGoal(widget.month);
-                      _fetchGoal();
-                      if (context.mounted) Navigator.pop(context);
-                    },
-                    child: Text(
-                      "Remove",
-                      style: TextStyle(color: colors.error),
-                    ),
-                  ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    "Cancel",
-                    style: TextStyle(color: colors.onSurfaceVariant),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    final displayAmount = AppFormatters.parseCurrency(
-                      controller.text,
-                    );
-                    if (displayAmount > 0) {
-                      final baseAmount = CurrencyService.toBase(displayAmount);
-                      await GoalService.setGoal(
-                        widget.month,
-                        baseAmount,
-                        selectedType,
-                      );
-                    } else {
-                      await GoalService.clearGoal(widget.month);
-                    }
-                    _fetchGoal();
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  child: Text(
-                    "Save",
-                    style: TextStyle(color: colors.primary, fontWeight: .bold),
-                  ),
-                ),
-              ],
-            );
-          },
+  StatefulBuilder statefulBuilder(
+    GoalType selectedType,
+    ColorScheme colors,
+    TextEditingController controller,
+  ) {
+    return StatefulBuilder(
+      builder: (context, setDialogState) {
+        final dialogContent = [
+          Expanded(
+            child: ChoiceChip(
+              label: const Center(child: Text('Budget')),
+              selected: selectedType == .budget,
+              showCheckmark: false,
+              selectedColor: colors.errorContainer,
+              onSelected: (selected) {
+                setDialogState(() => selectedType = .budget);
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ChoiceChip(
+              label: const Center(child: Text('Profit')),
+              selected: selectedType == .profit,
+              showCheckmark: false,
+              selectedColor: colors.primary.withValues(alpha: 0.2),
+              onSelected: (selected) {
+                setDialogState(() => selectedType = .profit);
+              },
+            ),
+          ),
+        ];
+
+        return monthlyGoalDialog(
+          dialogContent,
+          controller,
+          colors,
+          context,
+          selectedType,
         );
       },
+    );
+  }
+
+  AlertDialog monthlyGoalDialog(
+    List<Widget> dialogContent,
+    TextEditingController controller,
+    ColorScheme colors,
+    BuildContext context,
+    GoalType selectedType,
+  ) {
+    final dialogAction = [
+      if (_currentGoal != null)
+        TextButton(
+          onPressed: () async {
+            await IsarService().clearGoal(widget.month);
+            _fetchGoal();
+            if (context.mounted) Navigator.pop(context);
+          },
+          child: Text("Remove", style: TextStyle(color: colors.error)),
+        ),
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text("Cancel", style: TextStyle(color: colors.onSurfaceVariant)),
+      ),
+      TextButton(
+        onPressed: () async {
+          final displayAmount = AppFormatters.parseCurrency(controller.text);
+          if (displayAmount > 0) {
+            final baseAmount = CurrencyService.toBase(displayAmount);
+            final newGoal = MonthlyGoal()
+              ..month = widget.month
+              ..amount = baseAmount
+              ..type = selectedType;
+            await IsarService().saveGoal(newGoal);
+          } else {
+            await IsarService().clearGoal(widget.month);
+          }
+          _fetchGoal();
+          if (context.mounted) Navigator.pop(context);
+        },
+        child: Text(
+          "Save",
+          style: TextStyle(color: colors.primary, fontWeight: .bold),
+        ),
+      ),
+    ];
+
+    return AlertDialog(
+      title: const Text("Set Monthly Goal", textAlign: .center),
+      content: Column(
+        mainAxisSize: .min,
+        children: [
+          Row(children: dialogContent),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            keyboardType: const .numberWithOptions(decimal: true),
+            inputFormatters: [PnLFormatter()],
+            decoration: InputDecoration(
+              hintText: "0.00",
+              prefixText: "$symbol ",
+              filled: true,
+              fillColor: colors.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: .circular(12),
+                borderSide: .none,
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: dialogAction,
     );
   }
 

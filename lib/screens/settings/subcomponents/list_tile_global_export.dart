@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/services/csv_service.dart';
+import 'package:pal_journal/services/csv/csv_service.dart';
 
 class ListTileGlobalExport extends StatelessWidget {
   const ListTileGlobalExport({super.key});
@@ -19,9 +19,7 @@ class ListTileGlobalExport extends StatelessWidget {
         "Export your entire journal history",
         style: TextStyle(fontSize: 12),
       ),
-      onTap: () async {
-        await CsvService.exportAll();
-      },
+      onTap: () async => await CsvService.exportAll(),
     );
   }
 }

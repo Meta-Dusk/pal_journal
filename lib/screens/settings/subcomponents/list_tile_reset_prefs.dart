@@ -1,4 +1,3 @@
-// --- TIER 1: SOFT RESET ---
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,30 +28,7 @@ class ListTileResetPreferences extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(
-            "Reset Preferences?",
-            style: TextStyle(color: colors.error),
-          ),
-          content: const Text(
-            "This will reset your custom tags, monthly goals, "
-            "and UI settings back to default.\n\n"
-            "Your financial ledger will NOT be deleted.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(
-                "Reset",
-                style: TextStyle(color: colors.error, fontWeight: .bold),
-              ),
-            ),
-          ],
-        );
+        return confirmationDialog(colors, context);
       },
     );
 
@@ -65,5 +41,29 @@ class ListTileResetPreferences extends StatelessWidget {
         const SnackBar(content: Text("Preferences reset to default.")),
       );
     }
+  }
+
+  AlertDialog confirmationDialog(ColorScheme colors, BuildContext context) {
+    return AlertDialog(
+      title: Text("Reset Preferences?", style: TextStyle(color: colors.error)),
+      content: const Text(
+        "This will reset your custom tags, monthly goals, "
+        "and UI settings back to default.\n\n"
+        "Your financial ledger will NOT be deleted.",
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text("Cancel"),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(
+            "Reset",
+            style: TextStyle(color: colors.error, fontWeight: .bold),
+          ),
+        ),
+      ],
+    );
   }
 }

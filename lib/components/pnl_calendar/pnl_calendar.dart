@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/isar_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
-import 'package:pal_journal/services/goal_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/main.dart';
-import 'subcomponents/calendar_components.dart';
+import './subcomponents/calendar_components.dart';
 
 class PnLCalendar extends StatefulWidget {
   const PnLCalendar({super.key});
@@ -21,7 +22,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, PnLEntry> _dailyEntries = {};
-  GoalData? _currentMonthGoal;
+  MonthlyGoal? _currentMonthGoal;
 
   @override
   void initState() {
@@ -61,7 +62,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
   }
 
   Future<void> _loadMonthGoal(DateTime month) async {
-    final goal = await GoalService.getGoal(month);
+    final goal = await IsarService().getGoal(month);
     setState(() => _currentMonthGoal = goal);
   }
 
@@ -334,13 +335,14 @@ class _PnLCalendarState extends State<PnLCalendar> {
         const SizedBox(height: 12),
         GestureDetector(
           onTap: () async {
-            // Re-save the goal with the new offset (which perfectly equals total income)
-            await GoalService.setGoal(
-              _focusedDay,
-              _currentMonthGoal!.amount,
-              .budget,
-              syncedOffset: _monthlyIncome,
-            );
+            // Re-save the goal with the new offset
+            // (which perfectly equals total income)
+            final newGoal = MonthlyGoal()
+              ..month = _focusedDay
+              ..amount = _currentMonthGoal!.amount
+              ..type = .budget
+              ..syncedOffset = _monthlyIncome;
+            await IsarService().saveGoal(newGoal);
             _loadMonthGoal(_focusedDay); // Refresh the UI instantly
           },
           child: Container(
