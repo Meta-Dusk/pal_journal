@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "579107211170",
+    "project_id": "pal-journal",
+    "storage_bucket": "pal-journal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:579107211170:android:8170fcc84b2388160914fb",
+        "android_client_info": {
+          "package_name": "com.metadusk.paljournal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "579107211170-hg8ev7g1t0esb7polfqspits4k86ts4r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.metadusk.paljournal",
+            "certificate_hash": "fa85d2eb0b8a3cd0ca57c1a307aa16630758d791"
+          }
+        },
+        {
+          "client_id": "579107211170-0f7h27bkb704ep3tjim36do6fl4pre9a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfYm76yLTT_91p5jGnII4_hSx0DUO1F6M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "579107211170-0f7h27bkb704ep3tjim36do6fl4pre9a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
