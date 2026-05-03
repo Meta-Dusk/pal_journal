@@ -1,5 +1,5 @@
-// --- TIER 2: HARD RESET ---
 import 'package:flutter/material.dart';
+import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pal_journal/main.dart';
@@ -32,103 +32,124 @@ class ListTileFactoryReset extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            // Strict lock!
-            final isUnlocked = controller.text == "DELETE";
-
-            return AlertDialog(
-              title: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: colors.error),
-                  const SizedBox(width: 8),
-                  Text("Erase All Data", style: TextStyle(color: colors.error)),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: .min,
-                crossAxisAlignment: .start,
-                children: [
-                  const Text(
-                    "This will permanently delete your entire financial ledger "
-                    "AND reset all preferences. "
-                    "This action CANNOT be undone.\n\n"
-                    "Type DELETE to confirm.",
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    onChanged: (value) => setDialogState(
-                      () {},
-                    ), // Updates the button state instantly
-                    decoration: InputDecoration(
-                      hintText: "DELETE",
-                      filled: true,
-                      fillColor: colors.surfaceContainerHighest,
-                      border: OutlineInputBorder(
-                        borderRadius: .circular(8),
-                        borderSide: .none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    "Cancel",
-                    style: TextStyle(color: colors.onSurfaceVariant),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: isUnlocked
-                      ? () => Navigator.pop(context, true)
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.error,
-                    foregroundColor: colors.onError,
-                    disabledBackgroundColor: colors.surfaceContainerHighest,
-                  ),
-                  child: const Text(
-                    "Erase Everything",
-                    style: TextStyle(fontWeight: .bold),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
+        return statefulBuilder(controller, colors);
       },
     );
 
-    if (confirm == true && context.mounted) {
-      // 1. Purge SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+    if (confirm != true || !context.mounted) return;
+    // Purge SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
 
-      // 2. Purge Isar Database
-      final isar = await isarService.db;
-      await isar.writeTxn(() async {
-        await isar.collection<PnLEntry>().clear();
-      });
+    // Purge Isar Database
+    final isar = await isarService.db;
+    await isar.writeTxn(() async {
+      await isar.collection<PnLEntry>().clear();
+      await isar.collection<MonthlyGoal>().clear();
+    });
 
-      if (!context.mounted) return;
+    if (!context.mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "All data has been permanently erased.",
-            style: TextStyle(color: colors.onError),
-            textAlign: .center,
-          ),
-          backgroundColor: colors.error,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "All data has been permanently erased.",
+          style: TextStyle(color: colors.onError),
+          textAlign: .center,
         ),
-      );
+        backgroundColor: colors.error,
+      ),
+    );
 
-      // Pop back to the root (Home Screen) so the calendar completely refreshes
-      Navigator.popUntil(context, (route) => route.isFirst);
-    }
+    // Pop back to the root (Home Screen) so the calendar completely refreshes
+    Navigator.popUntil(context, (route) => route.isFirst);
+  }
+
+  StatefulBuilder statefulBuilder(
+    TextEditingController controller,
+    ColorScheme colors,
+  ) {
+    return StatefulBuilder(
+      builder: (context, setDialogState) {
+        // Strict lock!
+        final isUnlocked = controller.text == "DELETE";
+
+        return deletionDialog(
+          colors,
+          controller,
+          setDialogState,
+          context,
+          isUnlocked,
+        );
+      },
+    );
+  }
+
+  AlertDialog deletionDialog(
+    ColorScheme colors,
+    TextEditingController controller,
+    StateSetter setDialogState,
+    BuildContext context,
+    bool isUnlocked,
+  ) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: colors.error),
+          const SizedBox(width: 8),
+          Text("Erase All Data", style: TextStyle(color: colors.error)),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
+        children: [
+          const Text(
+            "This will permanently delete your entire financial ledger "
+            "AND reset all preferences. "
+            "This action CANNOT be undone.\n\n"
+            "Type DELETE to confirm.",
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            onChanged: (value) {
+              setDialogState(() {});
+            }, // Updates the button state instantly
+            decoration: InputDecoration(
+              hintText: "DELETE",
+              filled: true,
+              fillColor: colors.surfaceContainerHighest,
+              border: OutlineInputBorder(
+                borderRadius: .circular(8),
+                borderSide: .none,
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(
+            "Cancel",
+            style: TextStyle(color: colors.onSurfaceVariant),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: isUnlocked ? () => Navigator.pop(context, true) : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colors.error,
+            foregroundColor: colors.onError,
+            disabledBackgroundColor: colors.surfaceContainerHighest,
+          ),
+          child: const Text(
+            "Erase Everything",
+            style: TextStyle(fontWeight: .bold),
+          ),
+        ),
+      ],
+    );
   }
 }

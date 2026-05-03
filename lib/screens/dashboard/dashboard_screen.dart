@@ -3,9 +3,10 @@ import 'package:isar/isar.dart';
 import 'package:intl/intl.dart';
 
 import 'package:pal_journal/main.dart';
+import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
-import 'package:pal_journal/services/goal_service.dart';
-import 'subcomponents/components.dart';
+import 'package:pal_journal/services/isar_service.dart';
+import './subcomponents/components.dart';
 
 class DashboardScreen extends StatefulWidget {
   final double totalAmount;
@@ -24,7 +25,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<PnLEntry> _recentEntries = [];
   bool _isLoading = true;
-  GoalData? _monthlyGoal;
+  MonthlyGoal? _monthlyGoal;
 
   String _selectedFilter = '7D';
   late DateTime _startDate;
@@ -105,9 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     }
 
-    GoalData? goal;
+    MonthlyGoal? goal;
     if (filter == 'MTD') {
-      goal = await GoalService.getGoal(start);
+      goal = await IsarService().getGoal(start);
     }
 
     setState(() {

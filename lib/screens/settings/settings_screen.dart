@@ -1,5 +1,7 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
-import 'package:pal_journal/screens/settings/cloud_sync_card.dart';
+import './cloud_sync_card.dart';
 import './subcomponents/list_tiles.dart';
 import 'smart_auth_menu.dart';
 
@@ -52,14 +54,18 @@ class SettingsScreen extends StatelessWidget {
             const ListTileGlobalExport(),
             Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
             const ListTileGlobalImport(),
+            Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
+            const ListTileGoalsExport(),
+            Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
+            const ListTilesGoalsImport(),
           ],
         ),
       ),
     ];
 
     final cloudSyncSettings = [
-      const Text(
-        "Cloud Sync",
+      Text(
+        "Cloud Sync${Platform.isWindows ? " (Android Only)" : ""}",
         style: TextStyle(fontWeight: .bold, fontSize: 14),
       ),
       middleSpacer(),
@@ -72,8 +78,13 @@ class SettingsScreen extends StatelessWidget {
         child: Column(
           children: [
             const SmartAuthMenu(),
-            Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
-            const CloudSyncCard(),
+            if (!Platform.isWindows) ...[
+              Divider(
+                color: colors.onSurface.withValues(alpha: 0.2),
+                height: 1,
+              ),
+              const CloudSyncCard(),
+            ],
           ],
         ),
       ),

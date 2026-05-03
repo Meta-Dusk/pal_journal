@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 
@@ -15,7 +16,10 @@ class IsarService {
   Future<Isar> openDB() async {
     if (Isar.instanceNames.isEmpty) {
       final dir = await getApplicationDocumentsDirectory();
-      return await Isar.open([PnLEntrySchema], directory: dir.path);
+      return await Isar.open([
+        PnLEntrySchema,
+        MonthlyGoalSchema,
+      ], directory: dir.path);
     }
     return Future.value(Isar.getInstance());
   }
@@ -117,5 +121,59 @@ class IsarService {
   Future<List<PnLEntry>> getAllEntries() async {
     final isar = await db;
     return await isar.collection<PnLEntry>().where().findAll();
+  }
+
+  // --- MONTHLY GOALS ---
+
+  /// Saves or updates a goal for a specific month.
+  Future<void> saveGoal(MonthlyGoal goal) async {
+    final isar = await db;
+    // Ensure the date is always the 1st of the month at UTC for consistency
+    goal.month = DateTime.utc(goal.month.year, goal.month.month, 1);
+
+    await isar.writeTxn(() async {
+      await isar.collection<MonthlyGoal>().put(goal);
+    });
+  }
+
+  /// Retrieves the goal for a specific month.
+  Future<MonthlyGoal?> getGoal(DateTime month) async {
+    final isar = await db;
+    final normalized = DateTime.utc(month.year, month.month, 1);
+    return await isar
+        .collection<MonthlyGoal>()
+        .filter()
+        .monthEqualTo(normalized)
+        .findFirst();
+  }
+
+  /// Clears the goal for a specific month.
+  Future<void> clearGoal(DateTime month) async {
+    final isar = await db;
+    // Always normalize to the 1st of the month at UTC to match the index
+    final normalized = DateTime.utc(month.year, month.month, 1);
+
+    await isar.writeTxn(() async {
+      await isar
+          .collection<MonthlyGoal>()
+          .filter()
+          .monthEqualTo(normalized)
+          .deleteFirst(); // Removes the single entry matching that month
+    });
+  }
+
+  /// Fetches all goals for global CSV export or Cloud Sync.
+  Future<List<MonthlyGoal>> getAllGoals() async {
+    final isar = await db;
+    return await isar.collection<MonthlyGoal>().where().findAll();
+  }
+
+  /// Bulk import goals from CSV/Cloud.
+  Future<void> replaceAllGoals(List<MonthlyGoal> goals) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.collection<MonthlyGoal>().clear();
+      await isar.collection<MonthlyGoal>().putAll(goals);
+    });
   }
 }
