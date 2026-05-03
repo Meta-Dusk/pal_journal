@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
+import 'package:pal_journal/utils/images.dart';
 
 class DashboardHeader extends StatefulWidget {
   final double totalAmount;
@@ -98,49 +99,51 @@ class _DashboardHeaderState extends State<DashboardHeader>
       ),
     );
 
+    final mainContent = [
+      Row(
+        crossAxisAlignment: .center,
+        children: [
+          lifetimeNetPnlText,
+          const SizedBox(width: 16),
+          Image.asset(
+            ImageAssets.icon,
+            width: 80,
+            height: 80,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.1),
+                  shape: .circle,
+                ),
+                child: Icon(Icons.pets, color: accentColor, size: 40),
+              );
+            },
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      Opacity(
+        opacity: 0.0,
+        child: Row(
+          children: [
+            Text(
+              "Tap for detailed analytics",
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+            ),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
+          ],
+        ),
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: .start,
       mainAxisSize: .min,
-      children: [
-        Row(
-          crossAxisAlignment: .center,
-          children: [
-            lifetimeNetPnlText,
-            const SizedBox(width: 16),
-            Image.asset(
-              'assets/mascot.png',
-              width: 80,
-              height: 80,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.1),
-                    shape: .circle,
-                  ),
-                  child: Icon(Icons.pets, color: accentColor, size: 40),
-                );
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Opacity(
-          opacity: 0.0,
-          child: Row(
-            children: [
-              Text(
-                "Tap for detailed analytics",
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
-              ),
-              const Spacer(),
-              Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
-            ],
-          ),
-        ),
-      ],
+      children: mainContent,
     );
   }
 

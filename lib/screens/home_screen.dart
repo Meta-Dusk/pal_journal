@@ -4,6 +4,7 @@ import 'package:pal_journal/main.dart';
 import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
 import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
+import 'package:pal_journal/utils/images.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,9 +45,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _loadLifetimeData() async {
     final total = await isarService.getLifetimePnL();
-    setState(() {
-      _lifetimePnL = total;
-    });
+    setState(() => _lifetimePnL = total);
   }
 
   @override
@@ -59,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen>
     final sign = isPositive ? "+" : "-";
     final accentColor = isPositive ? colors.primary : colors.error;
 
-    // --- THE ANIMATED CARD ---
     final hero = Hero(
       tag: 'lifetime_pnl_card',
       placeholderBuilder: (context, heroSize, child) {
@@ -87,25 +85,24 @@ class _HomeScreenState extends State<HomeScreen>
       child: hero,
     );
 
+    final mainContent = [
+      Text(
+        "Overview",
+        style: TextStyle(
+          fontSize: 28,
+          fontWeight: .bold,
+          color: colors.onSurface,
+        ),
+      ),
+      const SizedBox(height: 24),
+      heroTransitionHandler,
+    ];
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Padding(
         padding: const .all(24.0),
-        child: Column(
-          crossAxisAlignment: .start,
-          children: [
-            Text(
-              "Overview",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: .bold,
-                color: colors.onSurface,
-              ),
-            ),
-            const SizedBox(height: 24),
-            heroTransitionHandler,
-          ],
-        ),
+        child: Column(crossAxisAlignment: .start, children: mainContent),
       ),
     );
   }
@@ -122,34 +119,38 @@ class _HomeScreenState extends State<HomeScreen>
         // Calculate a slight alignment shift to make the gradient "sweep"
         final alignShift = (_breathingAnimation.value * 0.5) - 0.25;
 
+        final linearGradient = LinearGradient(
+          colors: [
+            colors.surfaceContainer,
+            Color.lerp(
+              colors.surfaceContainer,
+              accentColor.withValues(alpha: 0.15),
+              _breathingAnimation.value,
+            )!,
+            colors.surfaceContainerHighest,
+          ],
+          begin: Alignment(alignShift - 1.0, -1.0),
+          end: Alignment(alignShift + 1.0, 1.0),
+        );
+
+        final boxShadows = [
+          BoxShadow(
+            color: accentColor.withValues(
+              alpha: 0.05 + (_breathingAnimation.value * 0.05),
+            ),
+            blurRadius: 20 + (_breathingAnimation.value * 10),
+            offset: const Offset(0, 10),
+          ),
+        ];
+
         return Container(
           width: double.infinity,
           padding: const .all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colors.surfaceContainer,
-                Color.lerp(
-                  colors.surfaceContainer,
-                  accentColor.withValues(alpha: 0.15),
-                  _breathingAnimation.value,
-                )!,
-                colors.surfaceContainerHighest,
-              ],
-              begin: Alignment(alignShift - 1.0, -1.0),
-              end: Alignment(alignShift + 1.0, 1.0),
-            ),
+            gradient: linearGradient,
             borderRadius: .circular(24),
             border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: accentColor.withValues(
-                  alpha: 0.05 + (_breathingAnimation.value * 0.05),
-                ),
-                blurRadius: 20 + (_breathingAnimation.value * 10),
-                offset: const Offset(0, 10),
-              ),
-            ],
+            boxShadow: boxShadows,
           ),
           child: child,
         );
@@ -165,54 +166,50 @@ class _HomeScreenState extends State<HomeScreen>
     Color accentColor,
   ) {
     final symbol = CurrencyService.symbol;
-    final mainContent = [
-      // Left Side: The Text
-      Expanded(
-        child: Column(
-          crossAxisAlignment: .start,
-          children: [
-            Text(
-              "Lifetime Net PnL",
-              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            // FittedBox ensures giant numbers shrink dynamically
-            FittedBox(
-              fit: .scaleDown,
-              alignment: .centerLeft,
-              child: Text(
-                "$sign $symbol$displayAmount",
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: .bold,
-                  color: accentColor,
-                ),
+
+    final lifetimeNetPnlText = Expanded(
+      child: Column(
+        crossAxisAlignment: .start,
+        children: [
+          Text(
+            "Lifetime Net PnL",
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          // FittedBox ensures giant numbers shrink dynamically
+          FittedBox(
+            fit: .scaleDown,
+            alignment: .centerLeft,
+            child: Text(
+              "$sign $symbol$displayAmount",
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: .bold,
+                color: accentColor,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-      const SizedBox(width: 16),
+    );
 
-      // Right Side: The Mascot
-      Image.asset(
-        'assets/mascot.png',
-        width: 80,
-        height: 80,
-        fit: .contain,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.pets, color: accentColor, size: 40),
-          );
-        },
-      ),
-    ];
+    final image = Image.asset(
+      ImageAssets.icon,
+      width: 80,
+      height: 80,
+      fit: .contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.1),
+            shape: .circle,
+          ),
+          child: Icon(Icons.pets, color: accentColor, size: 40),
+        );
+      },
+    );
 
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
@@ -220,7 +217,10 @@ class _HomeScreenState extends State<HomeScreen>
         crossAxisAlignment: .start,
         mainAxisSize: .min,
         children: [
-          Row(crossAxisAlignment: .center, children: mainContent),
+          Row(
+            crossAxisAlignment: .center,
+            children: [lifetimeNetPnlText, const SizedBox(width: 16), image],
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
