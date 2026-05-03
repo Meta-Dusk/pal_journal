@@ -75,19 +75,39 @@ class DashboardSkeleton extends StatelessWidget {
       ),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: const Text("Analytics"),
-        centerTitle: true,
-      ),
-      body: Shimmer.fromColors(
-        baseColor: colors.surfaceContainer,
-        highlightColor: colors.surfaceContainerHighest,
-        child: SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const .symmetric(horizontal: 24.0),
-          child: Column(crossAxisAlignment: .start, children: mainContent),
+    final skeletonTabBar = TabBar(
+      splashFactory: NoSplash.splashFactory,
+      overlayColor: WidgetStateProperty.all(Colors.transparent),
+      dividerColor: Colors.transparent,
+      indicatorColor: colors.primary,
+      labelColor: colors.primary,
+      unselectedLabelColor: colors.onSurfaceVariant,
+      tabs: const [
+        Tab(text: "Overview", icon: Icon(Icons.dashboard)),
+        Tab(text: "Categories", icon: Icon(Icons.category)),
+      ],
+    );
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          title: const Text("Analytics"),
+          centerTitle: true,
+          bottom: PreferredSize(
+            preferredSize: skeletonTabBar.preferredSize,
+            child: IgnorePointer(child: skeletonTabBar),
+          ),
+        ),
+        body: Shimmer.fromColors(
+          baseColor: colors.surfaceContainer,
+          highlightColor: colors.surfaceContainerHighest,
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const .symmetric(horizontal: 24.0),
+            child: Column(crossAxisAlignment: .start, children: mainContent),
+          ),
         ),
       ),
     );

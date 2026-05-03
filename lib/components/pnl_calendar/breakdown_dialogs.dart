@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/utils/formatters.dart';
 import 'package:pal_journal/components/buttons.dart';
-
-const String _tagsKey = 'user_preset_tags';
-const List<String> _defaultTags = [
-  'Food',
-  'Transport',
-  'Salary',
-  'Bills',
-  'Shopping',
-  'Allowance',
-  'Leisure',
-];
+import 'package:pal_journal/utils/default_data.dart';
+import 'package:pal_journal/services/currency_service.dart';
 
 Future<ExpenseItem?> showAddBreakdownDialog(
   BuildContext context,
@@ -84,7 +74,7 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _currentTags = prefs.getStringList(_tagsKey) ?? List.from(_defaultTags);
+        _currentTags = prefs.getStringList(tagsKey) ?? List.from(defaultTags);
         _isLoadingTags = false;
       });
     }
@@ -255,13 +245,43 @@ class _TagEditorDialogState extends State<TagEditorDialog> {
 
   Future<void> _savePrefsAndPop() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_tagsKey, _editableTags);
+    await prefs.setStringList(tagsKey, _editableTags);
     if (mounted) Navigator.pop(context, _editableTags);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+
+    final listView = ListView.builder(
+      shrinkWrap: true,
+      itemCount: _editableTags.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          contentPadding: .zero,
+          title: Text(_editableTags[index]),
+          trailing: IconButton(
+            icon: Icon(Icons.delete_outline, color: colors.error, size: 20),
+            onPressed: () {
+              setState(() {
+                _editableTags.removeAt(index);
+              });
+            },
+          ),
+        );
+      },
+    );
+
+    final addButton = IconButton(
+      icon: Icon(Icons.add, color: colors.primary),
+      onPressed: () {
+        if (_newTagController.text.isEmpty) return;
+        setState(() {
+          _editableTags.add(_newTagController.text.trim());
+          _newTagController.clear();
+        });
+      },
+    );
 
     final dialogContent = [
       Row(
@@ -272,40 +292,13 @@ class _TagEditorDialogState extends State<TagEditorDialog> {
               decoration: const InputDecoration(hintText: "New Tag Name"),
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.add, color: colors.primary),
-            onPressed: () {
-              if (_newTagController.text.isNotEmpty) {
-                setState(() {
-                  _editableTags.add(_newTagController.text.trim());
-                  _newTagController.clear();
-                });
-              }
-            },
-          ),
+          addButton,
         ],
       ),
       const SizedBox(height: 16),
       ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 250),
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: _editableTags.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              contentPadding: .zero,
-              title: Text(_editableTags[index]),
-              trailing: IconButton(
-                icon: Icon(Icons.delete_outline, color: colors.error, size: 20),
-                onPressed: () {
-                  setState(() {
-                    _editableTags.removeAt(index);
-                  });
-                },
-              ),
-            );
-          },
-        ),
+        child: listView,
       ),
     ];
 
