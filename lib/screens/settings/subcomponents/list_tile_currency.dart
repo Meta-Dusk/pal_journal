@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
 
 class ListTileCurrency extends StatelessWidget {
   const ListTileCurrency({super.key});

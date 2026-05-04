@@ -198,6 +198,21 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   ElevatedButton actionsButton(ColorScheme colors) {
+    final loadingWidget = SizedBox(
+      height: 20,
+      width: 20,
+      child: CircularProgressIndicator(strokeWidth: 2, color: colors.onPrimary),
+    );
+
+    final labelText = Text(
+      _isLogin ? "Authenticate (Login)" : "Create Node (Register)",
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: .bold,
+        letterSpacing: 1.1,
+      ),
+    );
+
     return ElevatedButton(
       onPressed: _isLoading ? null : _submitEmail,
       style: ElevatedButton.styleFrom(
@@ -207,23 +222,7 @@ class _AuthScreenState extends State<AuthScreen> {
         shape: RoundedRectangleBorder(borderRadius: .circular(16)),
         elevation: 0,
       ),
-      child: _isLoading
-          ? SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: colors.onPrimary,
-              ),
-            )
-          : Text(
-              _isLogin ? "Authenticate (Login)" : "Create Node (Register)",
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: .bold,
-                letterSpacing: 1.1,
-              ),
-            ),
+      child: _isLoading ? loadingWidget : labelText,
     );
   }
 

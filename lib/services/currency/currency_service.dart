@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'custom_asset_injector.dart';
 
 class CurrencyService {
   // Notifiers so the app can react instantly
@@ -14,7 +15,8 @@ class CurrencyService {
   static const String _currencyKey = 'app_target_currency';
   static const String _ratesCacheKey = 'app_rates_cache';
   static const String _lastFetchKey = 'app_last_fetch';
-  static const String url = 'https://open.er-api.com/v6/latest/PHP';
+  static const String currencyRatesUri =
+      'https://open.er-api.com/v6/latest/PHP';
 
   /// Map of supported currencies and their symbols
   static final Map<String, String> supportedCurrencies = {
@@ -24,6 +26,7 @@ class CurrencyService {
     'GBP': '£',
     'JPY': '¥',
     'AUD': 'A\$',
+    'GOLD': 'g',
   };
 
   static Future<void> init() async {
@@ -44,10 +47,20 @@ class CurrencyService {
       if (now - lastFetch < 12 * 60 * 60 * 1000) return;
 
       // PHP is our base database currency
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(currencyRatesUri));
 
       if (response.statusCode == 200) {
-        await prefs.setString(_ratesCacheKey, response.body);
+        // Intercept and parse the JSON response
+        final decodedData = jsonDecode(response.body);
+
+        // Inject the custom gold rates before caching
+        decodedData['rates'] = await CustomAssetInjector.inject(
+          rawRates: decodedData['rates'],
+          prefs: prefs,
+          cacheKey: _ratesCacheKey,
+        );
+
+        await prefs.setString(_ratesCacheKey, jsonDecode(decodedData));
         await prefs.setInt(_lastFetchKey, now);
         await _loadCachedRates(); // Update the active rate
       }
@@ -58,11 +71,22 @@ class CurrencyService {
 
   static Future<bool> forceFetchRates() async {
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(currencyRatesUri));
 
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_ratesCacheKey, response.body);
+
+        // Intercept and parse the JSON response
+        final decodedData = jsonDecode(response.body);
+
+        // Inject the custom gold rates before caching
+        decodedData['rates'] = await CustomAssetInjector.inject(
+          rawRates: decodedData['rates'],
+          prefs: prefs,
+          cacheKey: _ratesCacheKey,
+        );
+
+        await prefs.setString(_ratesCacheKey, jsonEncode(decodedData));
         await prefs.setInt(
           _lastFetchKey,
           DateTime.now().millisecondsSinceEpoch,
@@ -127,6 +151,9 @@ class CurrencyService {
   static double toBase(double displayAmount) =>
       displayAmount / exchangeRateNotifier.value;
 
-  static String get symbol =>
-      supportedCurrencies[targetCurrencyNotifier.value] ?? '';
+  static String get symbol {
+    String s = supportedCurrencies[targetCurrencyNotifier.value] ?? '';
+    if (s == 'g') s = 'g ';
+    return s;
+  }
 }

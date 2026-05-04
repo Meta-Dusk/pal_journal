@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
 
 class AppFormatters {
   // Converts 150000.5 to "150,000.50"

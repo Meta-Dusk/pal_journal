@@ -27,15 +27,14 @@ class _MainLayoutState extends State<MainLayout> {
     super.dispose();
   }
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const PnLCalendar(),
-    const SettingsScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final List<Widget> screens = [
+      const HomeScreen(),
+      const PnLCalendar(),
+      const SettingsScreen(),
+    ];
 
     final navBarItems = const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
@@ -56,11 +55,9 @@ class _MainLayoutState extends State<MainLayout> {
           physics: const BouncingScrollPhysics(),
           onPageChanged: (index) {
             // Updates the bottom nav bar if the user manually swipes the screen
-            setState(() {
-              _currentIndex = index;
-            });
+            setState(() => _currentIndex = index);
           },
-          children: _screens,
+          children: screens,
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -70,14 +67,10 @@ class _MainLayoutState extends State<MainLayout> {
         currentIndex: _currentIndex,
         onTap: (index) {
           // Updates the state and animates the page simultaneously
-          setState(() {
-            _currentIndex = index;
-          });
+          setState(() => _currentIndex = index);
           _pageController.animateToPage(
             index,
-            duration: const Duration(
-              milliseconds: 300,
-            ), // The speed of the transition
+            duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
           );
         },

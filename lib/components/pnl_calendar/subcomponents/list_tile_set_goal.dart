@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pal_journal/models/monthly_goal.dart';
-import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 

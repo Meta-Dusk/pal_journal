@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/services/currency_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:isar/isar.dart';
 import 'package:intl/intl.dart';
-
-import 'package:pal_journal/main.dart';
-import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/utils/formatters.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
+import 'package:pal_journal/services/isar_service.dart';
+import 'package:pal_journal/models/pnl_entry.dart';
+import 'package:pal_journal/core/default_data.dart';
 
 class CategoryAnalyticsView extends StatefulWidget {
   const CategoryAnalyticsView({super.key});
@@ -34,48 +33,48 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
 
     // Load available tags
     final prefs = await SharedPreferences.getInstance();
-    final tags = prefs.getStringList('user_preset_tags') ?? [];
+    final tags = prefs.getStringList('user_preset_tags') ?? defaultTags;
 
     if (tags.isNotEmpty && _selectedCategory == null) {
       _selectedCategory = tags.first;
     }
 
-    // Fetch all entries from Isar
-    final isar = await isarService.db;
-    final allEntries = await isar
-        .collection<PnLEntry>()
-        .where()
-        .sortByDateDesc()
-        .findAll();
+    final allEntries = await IsarService().getAllEntries();
 
     // Process the data for the selected category
     double total = 0.0;
     List<Map<String, dynamic>> transactions = [];
 
-    if (_selectedCategory != null) {
-      for (var entry in allEntries) {
-        if (entry.breakdown == null) continue;
+    total = getTransactions(allEntries, total, transactions) ?? 0.0;
 
-        for (var item in entry.breakdown!) {
-          if (item.category == _selectedCategory) {
-            final amount = item.amount ?? 0.0;
-            total += amount;
+    if (!mounted) return;
+    setState(() {
+      _categories = tags;
+      _categoryTotal = total;
+      _filteredTransactions = transactions;
+      _isLoading = false;
+    });
+  }
 
-            // Save the transaction details for the list view
-            transactions.add({'date': entry.date, 'amount': amount});
-          }
-        }
+  double? getTransactions(
+    List<PnLEntry> allEntries,
+    double total,
+    List<Map<String, dynamic>> transactions,
+  ) {
+    if (_selectedCategory == null) return null;
+    for (var entry in allEntries) {
+      if (entry.breakdown == null) continue;
+
+      for (var item in entry.breakdown!) {
+        if (item.category != _selectedCategory) continue;
+        final amount = item.amount ?? 0.0;
+        total += amount;
+
+        // Save the transaction details for the list view
+        transactions.add({'date': entry.date, 'amount': amount});
       }
     }
-
-    if (mounted) {
-      setState(() {
-        _categories = tags;
-        _categoryTotal = total;
-        _filteredTransactions = transactions;
-        _isLoading = false;
-      });
-    }
+    return total;
   }
 
   @override
@@ -96,7 +95,35 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
     }
 
     final symbol = CurrencyService.symbol;
-    final totalSummaryCard = Padding(
+
+    return Column(
+      crossAxisAlignment: .start,
+      children: [
+        categorySelector(colors),
+        const SizedBox(height: 24),
+        totalSummaryCard(colors, symbol),
+        const SizedBox(height: 24),
+
+        // --- THE TRANSACTION HISTORY LIST ---
+        Padding(
+          padding: const .symmetric(horizontal: 24.0),
+          child: Text(
+            "History",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: .bold,
+              color: colors.onSurface,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        transactionView(colors),
+      ],
+    );
+  }
+
+  Padding totalSummaryCard(ColorScheme colors, String symbol) {
+    return Padding(
       padding: const .symmetric(horizontal: 24.0),
       child: Container(
         width: double.infinity,
@@ -132,8 +159,10 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
         ),
       ),
     );
+  }
 
-    final categorySelector = SizedBox(
+  SizedBox categorySelector(ColorScheme colors) {
+    return SizedBox(
       height: 50,
       child: ListView.builder(
         scrollDirection: .horizontal,
@@ -169,48 +198,23 @@ class _CategoryAnalyticsViewState extends State<CategoryAnalyticsView> {
         },
       ),
     );
+  }
 
-    return Column(
-      crossAxisAlignment: .start,
-      children: [
-        // --- THE CATEGORY SELECTOR (Horizontal Chips) ---
-        categorySelector,
+  Expanded transactionView(ColorScheme colors) {
+    final placeholderText = Center(
+      child: Text(
+        "No transactions found for this category.",
+        style: TextStyle(color: colors.onSurfaceVariant),
+      ),
+    );
 
-        const SizedBox(height: 24),
+    final transactionsView = TransactionsBuilder(
+      filteredTransactions: _filteredTransactions,
+      colors: colors,
+    );
 
-        // --- THE TOTAL SUMMARY CARD ---
-        totalSummaryCard,
-
-        const SizedBox(height: 24),
-
-        // --- THE TRANSACTION HISTORY LIST ---
-        Padding(
-          padding: const .symmetric(horizontal: 24.0),
-          child: Text(
-            "History",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: colors.onSurface,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        Expanded(
-          child: _filteredTransactions.isEmpty
-              ? Center(
-                  child: Text(
-                    "No transactions found for this category.",
-                    style: TextStyle(color: colors.onSurfaceVariant),
-                  ),
-                )
-              : TransactionsBuilder(
-                  filteredTransactions: _filteredTransactions,
-                  colors: colors,
-                ),
-        ),
-      ],
+    return Expanded(
+      child: _filteredTransactions.isEmpty ? placeholderText : transactionsView,
     );
   }
 }
@@ -238,6 +242,21 @@ class TransactionsBuilder extends StatelessWidget {
         final isPositive = amount >= 0;
         final symbol = CurrencyService.symbol;
 
+        final maintContent = [
+          Text(
+            DateFormat('MMMM d, yyyy').format(date),
+            style: const TextStyle(fontWeight: .w500),
+          ),
+          Text(
+            "${isPositive ? '+' : '-'} $symbol"
+            "${_getCurrency(amount.abs())}",
+            style: TextStyle(
+              fontWeight: .bold,
+              color: isPositive ? colors.primary : colors.error,
+            ),
+          ),
+        ];
+
         return Container(
           margin: const .only(bottom: 8),
           padding: const .all(16),
@@ -245,23 +264,7 @@ class TransactionsBuilder extends StatelessWidget {
             color: colors.surfaceContainerHighest,
             borderRadius: .circular(12),
           ),
-          child: Row(
-            mainAxisAlignment: .spaceBetween,
-            children: [
-              Text(
-                DateFormat('MMMM d, yyyy').format(date),
-                style: const TextStyle(fontWeight: .w500),
-              ),
-              Text(
-                "${isPositive ? '+' : '-'} $symbol"
-                "${_getCurrency(amount.abs())}",
-                style: TextStyle(
-                  fontWeight: .bold,
-                  color: isPositive ? colors.primary : colors.error,
-                ),
-              ),
-            ],
-          ),
+          child: Row(mainAxisAlignment: .spaceBetween, children: maintContent),
         );
       },
     );
