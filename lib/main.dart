@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 import 'package:pal_journal/services/auth_service.dart';
-
 import 'firebase_options.dart';
 import 'package:pal_journal/screens/main_layout.dart';
 import 'package:pal_journal/services/currency_service.dart';
@@ -12,12 +12,21 @@ late IsarService isarService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
+  );
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await AuthService.init();
   isarService = IsarService();
   await ThemeService.init();
   await ThemeService.loadThemeMode();
   await CurrencyService.init();
+
   runApp(const MainApp());
 }
 

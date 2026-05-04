@@ -4,7 +4,7 @@ import 'package:pal_journal/main.dart';
 import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
 import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
-import 'package:pal_journal/utils/images.dart';
+import 'package:pal_journal/core/images.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

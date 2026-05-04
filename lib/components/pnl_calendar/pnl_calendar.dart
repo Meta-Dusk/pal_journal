@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
-
 import 'package:pal_journal/utils/formatters.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
-import 'package:pal_journal/main.dart';
 import './subcomponents/calendar_components.dart';
 
 class PnLCalendar extends StatefulWidget {
@@ -36,30 +33,31 @@ class _PnLCalendarState extends State<PnLCalendar> {
 
   double get _monthlyExpenses {
     return _dailyEntries.values
-        .where(
-          (e) =>
-              e.date.year == _focusedDay.year &&
-              e.date.month == _focusedDay.month &&
-              e.amount < 0,
-        )
+        .where(_checkFocusedDateLoss)
         .fold(0.0, (sum, e) => sum + e.amount.abs());
+  }
+
+  bool _checkFocusedDateLoss(PnLEntry entry) {
+    return entry.date.year == _focusedDay.year &&
+        entry.date.month == _focusedDay.month &&
+        entry.amount < 0;
   }
 
   double get _monthlyIncome {
     return _dailyEntries.values
-        .where(
-          (e) =>
-              e.date.year == _focusedDay.year &&
-              e.date.month == _focusedDay.month &&
-              e.amount > 0,
-        )
+        .where(_checkFocusedDateProfit)
         .fold(0.0, (sum, e) => sum + e.amount);
   }
 
-  /// Profit naturally goes up and down via algebraic Net PnL!
-  double get _netProfit {
-    return _monthlyIncome - _monthlyExpenses; // True algebraic Net PnL
+  bool _checkFocusedDateProfit(PnLEntry entry) {
+    return entry.date.year == _focusedDay.year &&
+        entry.date.month == _focusedDay.month &&
+        entry.amount > 0;
   }
+
+  /// Profit naturally goes up and down via algebraic Net PnL!
+  /// Returns the true algebraic Net PnL.
+  double get _netProfit => _monthlyIncome - _monthlyExpenses;
 
   Future<void> _loadMonthGoal(DateTime month) async {
     final goal = await IsarService().getGoal(month);
@@ -67,9 +65,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
   }
 
   Future<void> _loadPnLData() async {
-    final isar = await isarService.db;
-    final entries = await isar.collection<PnLEntry>().where().findAll();
-
+    final entries = await IsarService().getAllEntries();
     final Map<DateTime, PnLEntry> loadedData = {};
     for (var entry in entries) {
       final normalizedDate = DateTime.utc(
@@ -81,10 +77,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
     }
 
     if (!mounted) return;
-
-    setState(() {
-      _dailyEntries = loadedData;
-    });
+    setState(() => _dailyEntries = loadedData);
   }
 
   PnLEntry? _getEntryForDay(DateTime day) {
@@ -92,12 +85,14 @@ class _PnLCalendarState extends State<PnLCalendar> {
     return _dailyEntries[normalizedDay];
   }
 
-  // Opens the read-only view
+  /// Opens the read-only view
   void _openDetailsSheet(DateTime day) {
     final entry = _getEntryForDay(day);
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: .vertical(top: .circular(20)),
       ),
@@ -112,13 +107,14 @@ class _PnLCalendarState extends State<PnLCalendar> {
     );
   }
 
-  // Opens the editor, and reloads data if the user hit save
+  /// Opens the editor, and reloads data if the user hit save
   void _openEditSheet(DateTime day) async {
     final entry = _getEntryForDay(day);
 
     final bool? didDataChange = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: .vertical(top: .circular(20)),
       ),
@@ -126,9 +122,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
     );
 
     //? If the widget popped with 'true', the user saved or reset data
-    if (didDataChange == true) {
-      await _loadPnLData();
-    }
+    if (didDataChange == true) await _loadPnLData();
   }
 
   void _openMonthSettings() async {
@@ -138,10 +132,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
     );
 
     await _loadMonthGoal(_focusedDay);
-
-    if (shouldClearMonth == true) {
-      await _loadPnLData();
-    }
+    if (shouldClearMonth == true) await _loadPnLData();
   }
 
   @override
@@ -149,6 +140,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
     final colors = Theme.of(context).colorScheme;
 
     final tableCalendar = TableCalendar(
+      pageJumpingEnabled: true,
       firstDay: DateTime.utc(2020, 1, 1),
       lastDay: DateTime.utc(2030, 12, 31),
       focusedDay: _focusedDay,
@@ -188,48 +180,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
         weekdayStyle: TextStyle(color: colors.onSurfaceVariant),
         weekendStyle: TextStyle(color: colors.onSurfaceVariant),
       ),
-      calendarBuilders: CalendarBuilders(
-        headerTitleBuilder: (context, day) {
-          final monthText = DateFormat('yMMMM').format(day);
-          return Row(
-            mainAxisSize: .min,
-            children: [
-              Text(
-                monthText,
-                style: TextStyle(
-                  color: colors.onSurface,
-                  fontSize: 18,
-                  fontWeight: .bold,
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.settings_outlined,
-                  color: colors.onSurfaceVariant,
-                  size: 20,
-                ),
-                onPressed: _openMonthSettings,
-                splashRadius: 20, // Keeps the ripple effect tight
-              ),
-            ],
-          );
-        },
-        defaultBuilder: (context, day, focusedDay) =>
-            CustomDayCell(day: day, entry: _getEntryForDay(day)),
-        todayBuilder: (context, day, focusedDay) =>
-            CustomDayCell(day: day, entry: _getEntryForDay(day), isToday: true),
-        selectedBuilder: (context, day, focusedDay) => CustomDayCell(
-          day: day,
-          entry: _getEntryForDay(day),
-          isSelected: true,
-        ),
-        outsideBuilder: (context, day, focusedDay) => Center(
-          child: Text(
-            '${day.day}',
-            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.3)),
-          ),
-        ),
-      ),
+      calendarBuilders: _calendarBuilders(colors),
     );
 
     return Column(
@@ -240,6 +191,49 @@ class _PnLCalendarState extends State<PnLCalendar> {
           buildMonthlyGoalIndicator(colors),
         ],
       ],
+    );
+  }
+
+  CalendarBuilders<dynamic> _calendarBuilders(ColorScheme colors) {
+    return CalendarBuilders(
+      headerTitleBuilder: (context, day) {
+        final monthText = DateFormat('yMMMM').format(day);
+        final mainContent = [
+          Text(
+            monthText,
+            style: TextStyle(
+              color: colors.onSurface,
+              fontSize: 18,
+              fontWeight: .bold,
+            ),
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.settings_outlined,
+              color: colors.onSurfaceVariant,
+              size: 20,
+            ),
+            onPressed: _openMonthSettings,
+            splashRadius: 20, // Keeps the ripple effect tight
+          ),
+        ];
+        return Row(mainAxisSize: .min, children: mainContent);
+      },
+      defaultBuilder: (context, day, focusedDay) =>
+          CustomDayCell(day: day, entry: _getEntryForDay(day)),
+      todayBuilder: (context, day, focusedDay) =>
+          CustomDayCell(day: day, entry: _getEntryForDay(day), isToday: true),
+      selectedBuilder: (context, day, focusedDay) => CustomDayCell(
+        day: day,
+        entry: _getEntryForDay(day),
+        isSelected: true,
+      ),
+      outsideBuilder: (context, day, focusedDay) => Center(
+        child: Text(
+          '${day.day}',
+          style: TextStyle(color: colors.onSurface.withValues(alpha: 0.3)),
+        ),
+      ),
     );
   }
 
@@ -271,7 +265,8 @@ class _PnLCalendarState extends State<PnLCalendar> {
       isOverBudget = currentValue > target;
       barColor = isOverBudget ? colors.error : colors.primary;
       valueText =
-          "$symbol${_getCurrency(currentValue)} / $symbol${_getCurrency(target)}";
+          "$symbol${_getCurrency(currentValue)} "
+          "/ $symbol${_getCurrency(target)}";
     } else {
       label = "Profit Target";
       target = _currentMonthGoal!.amount;
@@ -282,7 +277,8 @@ class _PnLCalendarState extends State<PnLCalendar> {
       isGoalMet = currentValue >= target;
       barColor = isGoalMet ? Colors.greenAccent : colors.primary;
       valueText =
-          "$symbol${_getCurrency(currentValue)} / $symbol${_getCurrency(target)}";
+          "$symbol${_getCurrency(currentValue)} "
+          "/ $symbol${_getCurrency(target)}";
     }
 
     final mainContent = [

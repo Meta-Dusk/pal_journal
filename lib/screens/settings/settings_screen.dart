@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import 'package:pal_journal/services/auth_service.dart';
 import './cloud_sync_card.dart';
 import './subcomponents/list_tiles.dart';
 import 'smart_auth_menu.dart';
@@ -75,18 +76,7 @@ class SettingsScreen extends StatelessWidget {
           border: .all(color: colors.onSurface.withValues(alpha: 0.3)),
           borderRadius: .circular(16),
         ),
-        child: Column(
-          children: [
-            const SmartAuthMenu(),
-            if (!Platform.isWindows) ...[
-              Divider(
-                color: colors.onSurface.withValues(alpha: 0.2),
-                height: 1,
-              ),
-              const CloudSyncCard(),
-            ],
-          ],
-        ),
+        child: AuthView(),
       ),
     ];
 
@@ -143,4 +133,38 @@ class SettingsScreen extends StatelessWidget {
 
   SizedBox bottomPadding() => const SizedBox(height: 32);
   SizedBox middleSpacer() => const SizedBox(height: 8);
+}
+
+class AuthView extends StatelessWidget {
+  const AuthView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return ListenableBuilder(
+      listenable: AuthService.currentUserNotifier,
+      builder: (context, _) {
+        final user = AuthService.currentUserNotifier.value;
+
+        if (user == null) {
+          final loggedOutContent = [
+            const SmartAuthMenu(),
+            if (!Platform.isWindows) const CloudSyncCard(),
+          ];
+          return Column(children: loggedOutContent);
+        }
+
+        final loggedInContent = [
+          Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
+          const CloudSyncCard(),
+        ];
+        return Column(
+          children: [
+            const SmartAuthMenu(),
+            if (!Platform.isWindows) ...loggedInContent,
+          ],
+        );
+      },
+    );
+  }
 }

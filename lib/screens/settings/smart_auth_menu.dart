@@ -14,9 +14,7 @@ class SmartAuthMenu extends StatelessWidget {
         final user = AuthService.currentUserNotifier.value;
 
         // GUEST MODE
-        if (user == null) {
-          return ListTileGuestMode();
-        }
+        if (user == null) return ListTileGuestMode();
 
         // LOGGED IN MODE
         return LoggedInView(user: user);

@@ -5,7 +5,7 @@ import 'package:pal_journal/utils/formatters.dart';
 import 'package:pal_journal/services/currency_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
-import 'package:pal_journal/utils/default_data.dart';
+import 'package:pal_journal/core/default_data.dart';
 
 class CategoryAnalyticsView extends StatefulWidget {
   const CategoryAnalyticsView({super.key});

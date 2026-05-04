@@ -56,9 +56,7 @@ class _MainLayoutState extends State<MainLayout> {
           physics: const BouncingScrollPhysics(),
           onPageChanged: (index) {
             // Updates the bottom nav bar if the user manually swipes the screen
-            setState(() {
-              _currentIndex = index;
-            });
+            setState(() => _currentIndex = index);
           },
           children: _screens,
         ),
@@ -70,14 +68,10 @@ class _MainLayoutState extends State<MainLayout> {
         currentIndex: _currentIndex,
         onTap: (index) {
           // Updates the state and animates the page simultaneously
-          setState(() {
-            _currentIndex = index;
-          });
+          setState(() => _currentIndex = index);
           _pageController.animateToPage(
             index,
-            duration: const Duration(
-              milliseconds: 300,
-            ), // The speed of the transition
+            duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
           );
         },
