@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:pal_journal/utils/formatters.dart';
-import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/core/default_data.dart';

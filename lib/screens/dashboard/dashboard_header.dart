@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 import 'package:pal_journal/core/images.dart';
 

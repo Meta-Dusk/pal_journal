@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:pal_journal/services/auth_service.dart';
 import 'firebase_options.dart';
 import 'package:pal_journal/screens/main_layout.dart';
-import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/services/theme_service.dart';
 

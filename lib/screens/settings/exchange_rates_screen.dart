@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
 
 class ExchangeRatesScreen extends StatefulWidget {
   const ExchangeRatesScreen({super.key});
@@ -166,6 +166,17 @@ class DisplayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isGold = targetCode == 'GOLD';
+
+    final avatarBgColor = isGold
+        ? Colors.amber.shade200
+        : colors.primaryContainer;
+    final avatarFgColor = isGold
+        ? Colors.amber.shade900
+        : colors.onPrimaryContainer;
+
+    final displayTitle = isGold ? "1 Gram Gold" : "1 $targetCode";
+
     return Card(
       elevation: 0,
       color: colors.surfaceContainer,
@@ -173,16 +184,15 @@ class DisplayCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: .circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: colors.primaryContainer,
-          child: Text(
-            targetSymbol!,
-            style: TextStyle(
-              color: colors.onPrimaryContainer,
-              fontWeight: .bold,
-            ),
-          ),
+          backgroundColor: avatarBgColor,
+          child: isGold
+              ? Icon(Icons.workspace_premium, color: avatarFgColor)
+              : Text(
+                  targetSymbol ?? '',
+                  style: TextStyle(color: avatarFgColor, fontWeight: .bold),
+                ),
         ),
-        title: Text("1 $targetCode"),
+        title: Text(displayTitle),
         trailing: Text(
           "₱ $formattedInverse",
           style: TextStyle(

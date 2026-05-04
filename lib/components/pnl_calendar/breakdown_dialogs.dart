@@ -4,7 +4,7 @@ import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/utils/formatters.dart';
 import 'package:pal_journal/components/buttons.dart';
 import 'package:pal_journal/core/default_data.dart';
-import 'package:pal_journal/services/currency_service.dart';
+import 'package:pal_journal/services/currency/currency_service.dart';
 
 Future<ExpenseItem?> showAddBreakdownDialog(
   BuildContext context,
