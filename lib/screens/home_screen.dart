@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/components/pnl_filter_card.dart';
 
 import 'package:pal_journal/main.dart';
 import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
@@ -96,6 +97,8 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       const SizedBox(height: 24),
       heroTransitionHandler,
+      const SizedBox(height: 16),
+      PnLFilterCard(),
     ];
 
     return SingleChildScrollView(

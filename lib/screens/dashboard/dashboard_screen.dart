@@ -154,10 +154,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (var entry in _recentEntries) {
       if (entry.amount < maxLoss) maxLoss = entry.amount;
       for (var item in entry.breakdown ?? []) {
-        final cat = item.category ?? "Unknown";
-        final amt = (item.amount ?? 0.0).abs();
-        catTotals[cat] = (catTotals[cat] ?? 0) + amt;
-        totalExpense += amt;
+        final category = item.category ?? "Unknown";
+        final amount = (item.amount ?? 0.0).abs();
+        catTotals[category] = (catTotals[category] ?? 0) + amount;
+        totalExpense += amount;
       }
     }
 

@@ -185,7 +185,13 @@ class _PnLCalendarState extends State<PnLCalendar> {
 
     return Column(
       children: [
-        tableCalendar,
+        Container(
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerLow,
+            borderRadius: .vertical(bottom: .circular(16)),
+          ),
+          child: tableCalendar,
+        ),
         if (_currentMonthGoal != null) ...[
           const SizedBox(height: 16),
           buildMonthlyGoalIndicator(colors),
@@ -217,7 +223,15 @@ class _PnLCalendarState extends State<PnLCalendar> {
             splashRadius: 20, // Keeps the ripple effect tight
           ),
         ];
-        return Row(mainAxisSize: .min, children: mainContent);
+        return Container(
+          decoration: BoxDecoration(
+            // color: colors.surfaceContainerHigh,
+            borderRadius: .all(.circular(16)),
+            border: .all(color: colors.surfaceContainerHigh, width: 2),
+          ),
+          padding: .symmetric(horizontal: 8),
+          child: Row(mainAxisSize: .min, children: mainContent),
+        );
       },
       defaultBuilder: (context, day, focusedDay) =>
           CustomDayCell(day: day, entry: _getEntryForDay(day)),
