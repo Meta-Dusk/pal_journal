@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:pal_journal/components/goals/goal_progress_card.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
+import 'package:pal_journal/screens/settings/inventory_log_view.dart';
 import 'package:pal_journal/services/currency/currency_service.dart';
 import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
@@ -76,19 +77,11 @@ class DetailsSheet extends StatelessWidget {
         }),
     ];
 
-    final quantifiedGoals = [
-      const SizedBox(height: 8),
-      const Divider(),
-      Padding(
-        padding: const .symmetric(vertical: 8.0),
-        child: Text(
-          "Goals Due Today",
-          style: TextStyle(color: colors.onSurfaceVariant, fontWeight: .bold),
-        ),
-      ),
-      if (goals != null)
-        ...goals!.map((goal) => _buildDismissibleGoal(goal, context, colors)),
-    ];
+    // Active includes anything NOT finished OR finished but still pinned
+    final activeGoals = goals?.where((g) => _isActive(g)).toList() ?? [];
+
+    // Archived is ONLY for goals that are finished AND unpinned
+    final archivedGoals = goals?.where((g) => _isArchived(g)).toList() ?? [];
 
     final mainContent = [
       Text(
@@ -105,7 +98,30 @@ class DetailsSheet extends StatelessWidget {
         ...breakdownEntry,
       const SizedBox(height: 24),
       EditButton(onEditPressed: onEditPressed),
-      if (goals != null && goals!.isNotEmpty) ...quantifiedGoals,
+
+      if (activeGoals.isNotEmpty) ...[
+        const Divider(),
+        Padding(
+          padding: const .symmetric(vertical: 8.0),
+          child: Text(
+            "Daily Trackers",
+            style: TextStyle(color: colors.onSurfaceVariant, fontWeight: .bold),
+          ),
+        ),
+        ...activeGoals.map((g) => _buildDismissibleGoal(g, context, colors)),
+      ],
+
+      if (archivedGoals.isNotEmpty) ...[
+        const Divider(),
+        Padding(
+          padding: const .symmetric(vertical: 8.0),
+          child: Text(
+            "Completed & Archived",
+            style: TextStyle(color: colors.secondary, fontWeight: .bold),
+          ),
+        ),
+        ...archivedGoals.map((g) => ListTileItemLog(goal: g)),
+      ],
     ];
 
     return SingleChildScrollView(
@@ -117,6 +133,11 @@ class DetailsSheet extends StatelessWidget {
       ),
     );
   }
+
+  bool _isArchived(QuantifiedGoal g) => g.isCompleted && !g.isPinned;
+
+  bool _isActive(QuantifiedGoal g) =>
+      !g.isCompleted || (g.isCompleted && g.isPinned);
 
   ListTile getListTileGoal(ColorScheme colors, QuantifiedGoal goal) {
     return ListTile(
@@ -144,7 +165,7 @@ class DetailsSheet extends StatelessWidget {
         ),
         child: Icon(Icons.delete_outline, color: colors.onError),
       ),
-      confirmDismiss: (direction) => _showDeleteConfirmation(context, goal),
+      confirmDismiss: (_) => _showDeleteConfirmation(context, goal),
       onDismissed: (_) => onEditPressed(),
       child: GoalProgressCard(
         goal: goal,
@@ -152,6 +173,11 @@ class DetailsSheet extends StatelessWidget {
         showPinnedIcon: false,
       ),
     );
+  }
+
+  void contextSave(BuildContext context) {
+    Navigator.pop(context, true);
+    onRefresh();
   }
 
   Future<bool?> _showDeleteConfirmation(
@@ -166,14 +192,21 @@ class DetailsSheet extends StatelessWidget {
             onPressed: () => Navigator.pop(context, false),
             child: const Text("Cancel"),
           ),
+          if (goal.isCompleted)
+            TextButton(
+              onPressed: () async {
+                goal.isPinned = false;
+                await IsarService().saveQuantifiedGoal(goal);
+                if (context.mounted) contextSave(context);
+              },
+              child: const Text("Archive to Log"),
+            ),
           FilledButton(
             onPressed: () async {
               await IsarService().deleteQuantifiedGoal(goal.id);
-              if (!context.mounted) return;
-              Navigator.pop(context, true);
-              onRefresh();
+              if (context.mounted) contextSave(context);
             },
-            child: const Text("Delete"),
+            child: const Text("Delete Permanently"),
           ),
         ];
 

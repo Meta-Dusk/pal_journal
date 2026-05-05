@@ -6,7 +6,9 @@ import 'package:pal_journal/components/pnl_calendar/pnl_yearly_view.dart';
 enum CalendarView { daily, monthly, yearly }
 
 class PnLMainCalendarView extends StatefulWidget {
-  const PnLMainCalendarView({super.key});
+  final GlobalKey<PnLCalendarState>? calendarKey;
+
+  const PnLMainCalendarView({super.key, this.calendarKey});
 
   @override
   State<PnLMainCalendarView> createState() => _PnLMainCalendarViewState();
@@ -75,7 +77,7 @@ class _PnLMainCalendarViewState extends State<PnLMainCalendarView> {
   Widget _buildCurrentView() {
     switch (_currentView) {
       case .daily:
-        return const PnLCalendar(key: ValueKey('daily'));
+        return PnLCalendar(key: widget.calendarKey);
       case .monthly:
         return const PnLMonthlyView(key: ValueKey('monthly'));
       case .yearly:

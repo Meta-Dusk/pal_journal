@@ -13,10 +13,10 @@ class PnLCalendar extends StatefulWidget {
   const PnLCalendar({super.key});
 
   @override
-  State<PnLCalendar> createState() => _PnLCalendarState();
+  State<PnLCalendar> createState() => PnLCalendarState();
 }
 
-class _PnLCalendarState extends State<PnLCalendar> {
+class PnLCalendarState extends State<PnLCalendar> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, PnLEntry> _dailyEntries = {};
@@ -29,6 +29,12 @@ class _PnLCalendarState extends State<PnLCalendar> {
     _selectedDay = _focusedDay;
     _loadMonthGoal(_focusedDay);
     _loadAllData();
+  }
+
+  void refreshAllData() async {
+    await _loadAllData();
+    await _loadMonthGoal(_focusedDay);
+    if (mounted) setState(() {});
   }
 
   // --- THE NEW SPLIT MATH ENGINE ---

@@ -80,6 +80,19 @@ class SettingsScreen extends StatelessWidget {
       ),
     ];
 
+    final historySettings = [
+      Text("History", style: TextStyle(fontWeight: .bold, fontSize: 14)),
+      middleSpacer(),
+      Container(
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHigh.withValues(alpha: 0.1),
+          border: .all(color: colors.onSurface.withValues(alpha: 0.3)),
+          borderRadius: .circular(16),
+        ),
+        child: Column(children: [ListTileHistory()]),
+      ),
+    ];
+
     final nuclearSettings = [
       Text(
         "Danger Zone",
@@ -114,6 +127,8 @@ class SettingsScreen extends StatelessWidget {
       ...dataManagementSettings,
       bottomPadding(),
       ...cloudSyncSettings,
+      bottomPadding(),
+      ...historySettings,
       bottomPadding(),
       const Divider(),
       const SizedBox(height: 16),

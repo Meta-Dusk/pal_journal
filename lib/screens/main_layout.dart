@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/components/goals/goal_creation_sheet.dart';
+import '../components/goals/goal_creation_sheet.dart';
+import '../components/pnl_calendar/edit_sheet.dart';
+import '../components/pnl_calendar/pnl_calendar.dart';
 import '../components/pnl_calendar/pnl_main_calendar_view.dart';
+import '../services/isar_service.dart';
 import 'home_screen.dart';
 import 'settings/settings_screen.dart';
 
@@ -15,6 +18,7 @@ class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
   int _homeKeyTrigger = 0;
   late PageController _pageController;
+  final GlobalKey<PnLCalendarState> _calendarKey = GlobalKey();
 
   @override
   void initState() {
@@ -34,7 +38,7 @@ class _MainLayoutState extends State<MainLayout> {
     final colors = Theme.of(context).colorScheme;
     final List<Widget> screens = [
       HomeScreen(key: ValueKey('home_$_homeKeyTrigger')),
-      const PnLMainCalendarView(),
+      PnLMainCalendarView(calendarKey: _calendarKey),
       const SettingsScreen(),
     ];
 
@@ -89,11 +93,11 @@ class _MainLayoutState extends State<MainLayout> {
         if (_currentIndex == 0) {
           _showGoalCreation(context);
         } else if (_currentIndex == 1) {
-          // You could trigger a new PnL entry here if you wanted!
+          _openTodayEditor(context);
         }
       },
       child: Icon(
-        _currentIndex == 0 ? Icons.add_task : Icons.add,
+        _currentIndex == 0 ? Icons.add_task : Icons.edit_calendar_sharp,
         color: colors.onPrimary,
       ),
     );
@@ -115,6 +119,30 @@ class _MainLayoutState extends State<MainLayout> {
 
     if (didChange == true) {
       setState(() => _homeKeyTrigger++);
+    }
+  }
+
+  void _openTodayEditor(BuildContext context) async {
+    final today = DateTime.now();
+    final existingEntry = await IsarService().getEntryByDate(today);
+
+    if (!context.mounted) return;
+
+    final bool? didChange = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: .vertical(top: .circular(20)),
+      ),
+      builder: (context) => EditSheet(day: today, entry: existingEntry),
+    );
+
+    if (didChange == true) {
+      setState(() => _homeKeyTrigger++);
+
+      if (_calendarKey.currentState == null) return;
+      _calendarKey.currentState!.refreshAllData();
     }
   }
 }

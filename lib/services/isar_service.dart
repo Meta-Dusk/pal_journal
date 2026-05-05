@@ -58,6 +58,19 @@ class IsarService {
     });
   }
 
+  Future<PnLEntry?> getEntryByDate(DateTime date) async {
+    final isar = await db;
+
+    // Normalize the date to the start and end of the day
+    final startOfDay = DateTime(date.year, date.month, date.day, 0, 0, 0);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    return await isar.pnLEntrys
+        .filter()
+        .dateBetween(startOfDay, endOfDay)
+        .findFirst();
+  }
+
   /// Deletes a PnL entry for a specific date.
   Future<void> deletePnLForDate(DateTime date) async {
     final isar = await db;
@@ -195,6 +208,24 @@ class IsarService {
   Future<List<QuantifiedGoal>> getPinnedGoals() async {
     final isar = await db;
     return await isar.quantifiedGoals.filter().isPinnedEqualTo(true).findAll();
+  }
+
+  Future<List<QuantifiedGoal>> getActivePinnedGoals() async {
+    final isar = await db;
+    return await isar.quantifiedGoals
+        .filter()
+        .isPinnedEqualTo(true)
+        .isCompletedEqualTo(false)
+        .findAll();
+  }
+
+  /// Retrieves all finished quantized goals.
+  Future<List<QuantifiedGoal>> getCompletedGoals() async {
+    final isar = await db;
+    return await isar.quantifiedGoals
+        .filter()
+        .isCompletedEqualTo(true)
+        .findAll();
   }
 
   Future<void> replaceAllQuantifiedGoals(List<QuantifiedGoal> goals) async {
