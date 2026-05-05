@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pal_journal/components/goals/goal_progress_card.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
+import 'package:pal_journal/models/quantified_goal.dart';
+import 'package:pal_journal/screens/settings/inventory_log_view.dart';
 import 'package:pal_journal/services/currency/currency_service.dart';
+import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
 class DetailsSheet extends StatelessWidget {
   final DateTime day;
   final PnLEntry? entry;
+  final List<QuantifiedGoal>? goals;
   final VoidCallback onEditPressed;
+  final VoidCallback onRefresh;
 
   const DetailsSheet({
     super.key,
     required this.day,
     this.entry,
+    this.goals,
     required this.onEditPressed,
+    required this.onRefresh,
   });
 
   @override
@@ -25,6 +33,7 @@ class DetailsSheet extends StatelessWidget {
     final currency1 = AppFormatters.toCurrency(
       CurrencyService.toDisplay(entry?.amount ?? 0.0),
     );
+
     final noteEntry = [
       const SizedBox(height: 16),
       Container(
@@ -68,6 +77,12 @@ class DetailsSheet extends StatelessWidget {
         }),
     ];
 
+    // Active includes anything NOT finished OR finished but still pinned
+    final activeGoals = goals?.where((g) => _isActive(g)).toList() ?? [];
+
+    // Archived is ONLY for goals that are finished AND unpinned
+    final archivedGoals = goals?.where((g) => _isArchived(g)).toList() ?? [];
+
     final mainContent = [
       Text(
         formattedDate,
@@ -83,6 +98,30 @@ class DetailsSheet extends StatelessWidget {
         ...breakdownEntry,
       const SizedBox(height: 24),
       EditButton(onEditPressed: onEditPressed),
+
+      if (activeGoals.isNotEmpty) ...[
+        const Divider(),
+        Padding(
+          padding: const .symmetric(vertical: 8.0),
+          child: Text(
+            "Daily Trackers",
+            style: TextStyle(color: colors.onSurfaceVariant, fontWeight: .bold),
+          ),
+        ),
+        ...activeGoals.map((g) => _buildDismissibleGoal(g, context, colors)),
+      ],
+
+      if (archivedGoals.isNotEmpty) ...[
+        const Divider(),
+        Padding(
+          padding: const .symmetric(vertical: 8.0),
+          child: Text(
+            "Completed & Archived",
+            style: TextStyle(color: colors.secondary, fontWeight: .bold),
+          ),
+        ),
+        ...archivedGoals.map((g) => ListTileItemLog(goal: g)),
+      ],
     ];
 
     return SingleChildScrollView(
@@ -92,6 +131,91 @@ class DetailsSheet extends StatelessWidget {
         crossAxisAlignment: .start,
         children: mainContent,
       ),
+    );
+  }
+
+  bool _isArchived(QuantifiedGoal g) => g.isCompleted && !g.isPinned;
+
+  bool _isActive(QuantifiedGoal g) =>
+      !g.isCompleted || (g.isCompleted && g.isPinned);
+
+  ListTile getListTileGoal(ColorScheme colors, QuantifiedGoal goal) {
+    return ListTile(
+      leading: Icon(Icons.star, color: colors.tertiary),
+      title: Text(goal.title),
+      subtitle: Text("${goal.currentValue} / ${goal.targetValue} ${goal.unit}"),
+      trailing: Text("${(goal.progress * 100).toInt()}%"),
+    );
+  }
+
+  Widget _buildDismissibleGoal(
+    QuantifiedGoal goal,
+    BuildContext context,
+    ColorScheme colors,
+  ) {
+    return Dismissible(
+      key: Key('goal_${goal.id}'),
+      direction: .startToEnd,
+      background: Container(
+        alignment: .centerLeft,
+        padding: const .only(left: 20),
+        decoration: BoxDecoration(
+          color: colors.error,
+          borderRadius: .circular(16),
+        ),
+        child: Icon(Icons.delete_outline, color: colors.onError),
+      ),
+      confirmDismiss: (_) => _showDeleteConfirmation(context, goal),
+      onDismissed: (_) => onEditPressed(),
+      child: GoalProgressCard(
+        goal: goal,
+        onUpdate: onRefresh,
+        showPinnedIcon: false,
+      ),
+    );
+  }
+
+  void contextSave(BuildContext context) {
+    Navigator.pop(context, true);
+    onRefresh();
+  }
+
+  Future<bool?> _showDeleteConfirmation(
+    BuildContext context,
+    QuantifiedGoal goal,
+  ) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final actions = [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          if (goal.isCompleted)
+            TextButton(
+              onPressed: () async {
+                goal.isPinned = false;
+                await IsarService().saveQuantifiedGoal(goal);
+                if (context.mounted) contextSave(context);
+              },
+              child: const Text("Archive to Log"),
+            ),
+          FilledButton(
+            onPressed: () async {
+              await IsarService().deleteQuantifiedGoal(goal.id);
+              if (context.mounted) contextSave(context);
+            },
+            child: const Text("Delete Permanently"),
+          ),
+        ];
+
+        return AlertDialog(
+          title: const Text("Delete Goal?"),
+          content: Text("Are you sure you want to delete '${goal.title}'?"),
+          actions: actions,
+        );
+      },
     );
   }
 }

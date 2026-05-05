@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'package:pal_journal/models/monthly_goal.dart';
+import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 
@@ -19,10 +20,13 @@ class IsarService {
       return await Isar.open([
         PnLEntrySchema,
         MonthlyGoalSchema,
+        QuantifiedGoalSchema,
       ], directory: dir.path);
     }
     return Future.value(Isar.getInstance());
   }
+
+  // --- PNL ENTRIES ---
 
   /// Saves a new daily PnL entry.
   Future<void> savePnL(
@@ -52,6 +56,19 @@ class IsarService {
 
       await isar.collection<PnLEntry>().put(entryToSave);
     });
+  }
+
+  Future<PnLEntry?> getEntryByDate(DateTime date) async {
+    final isar = await db;
+
+    // Normalize the date to the start and end of the day
+    final startOfDay = DateTime(date.year, date.month, date.day, 0, 0, 0);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    return await isar.pnLEntrys
+        .filter()
+        .dateBetween(startOfDay, endOfDay)
+        .findFirst();
   }
 
   /// Deletes a PnL entry for a specific date.
@@ -174,6 +191,60 @@ class IsarService {
     await isar.writeTxn(() async {
       await isar.collection<MonthlyGoal>().clear();
       await isar.collection<MonthlyGoal>().putAll(goals);
+    });
+  }
+
+  // --- QUANTIFIED GOALS ---
+
+  /// Saves or updates a quantized goal.
+  Future<void> saveQuantifiedGoal(QuantifiedGoal goal) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.quantifiedGoals.put(goal);
+    });
+  }
+
+  /// Retrieves all pinned quantized goals.
+  Future<List<QuantifiedGoal>> getPinnedGoals() async {
+    final isar = await db;
+    return await isar.quantifiedGoals.filter().isPinnedEqualTo(true).findAll();
+  }
+
+  Future<List<QuantifiedGoal>> getActivePinnedGoals() async {
+    final isar = await db;
+    return await isar.quantifiedGoals
+        .filter()
+        .isPinnedEqualTo(true)
+        .isCompletedEqualTo(false)
+        .findAll();
+  }
+
+  /// Retrieves all finished quantized goals.
+  Future<List<QuantifiedGoal>> getCompletedGoals() async {
+    final isar = await db;
+    return await isar.quantifiedGoals
+        .filter()
+        .isCompletedEqualTo(true)
+        .findAll();
+  }
+
+  Future<void> replaceAllQuantifiedGoals(List<QuantifiedGoal> goals) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.collection<QuantifiedGoal>().clear();
+      await isar.collection<QuantifiedGoal>().putAll(goals);
+    });
+  }
+
+  Future<List<QuantifiedGoal>> getAllQuantifiedGoals() async {
+    final isar = await db;
+    return await isar.collection<QuantifiedGoal>().where().findAll();
+  }
+
+  Future<void> deleteQuantifiedGoal(Id id) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.quantifiedGoals.delete(id);
     });
   }
 }

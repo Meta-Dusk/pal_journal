@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/screens/home_screen.dart';
-import 'package:pal_journal/components/pnl_calendar/pnl_calendar.dart';
-import 'package:pal_journal/screens/settings/settings_screen.dart';
+import '../components/goals/goal_creation_sheet.dart';
+import '../components/pnl_calendar/edit_sheet.dart';
+import '../components/pnl_calendar/pnl_calendar.dart';
+import '../components/pnl_calendar/pnl_main_calendar_view.dart';
+import '../services/isar_service.dart';
+import 'home_screen.dart';
+import 'settings/settings_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -12,7 +16,9 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
+  int _homeKeyTrigger = 0;
   late PageController _pageController;
+  final GlobalKey<PnLCalendarState> _calendarKey = GlobalKey();
 
   @override
   void initState() {
@@ -31,8 +37,8 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final List<Widget> screens = [
-      const HomeScreen(),
-      const PnLCalendar(),
+      HomeScreen(key: ValueKey('home_$_homeKeyTrigger')),
+      PnLMainCalendarView(calendarKey: _calendarKey),
       const SettingsScreen(),
     ];
 
@@ -76,6 +82,67 @@ class _MainLayoutState extends State<MainLayout> {
         },
         items: navBarItems,
       ),
+      floatingActionButton: _currentIndex == 2 ? null : getFAB(colors, context),
     );
+  }
+
+  FloatingActionButton getFAB(ColorScheme colors, BuildContext context) {
+    return FloatingActionButton(
+      backgroundColor: colors.primary,
+      onPressed: () {
+        if (_currentIndex == 0) {
+          _showGoalCreation(context);
+        } else if (_currentIndex == 1) {
+          _openTodayEditor(context);
+        }
+      },
+      child: Icon(
+        _currentIndex == 0 ? Icons.add_task : Icons.edit_calendar_sharp,
+        color: colors.onPrimary,
+      ),
+    );
+  }
+
+  void _showGoalCreation(BuildContext context) async {
+    final bool? didChange = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const .vertical(top: .circular(24)),
+        ),
+        child: const GoalCreationSheet(),
+      ),
+    );
+
+    if (didChange == true) {
+      setState(() => _homeKeyTrigger++);
+    }
+  }
+
+  void _openTodayEditor(BuildContext context) async {
+    final today = DateTime.now();
+    final existingEntry = await IsarService().getEntryByDate(today);
+
+    if (!context.mounted) return;
+
+    final bool? didChange = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: .vertical(top: .circular(20)),
+      ),
+      builder: (context) => EditSheet(day: today, entry: existingEntry),
+    );
+
+    if (didChange == true) {
+      setState(() => _homeKeyTrigger++);
+
+      if (_calendarKey.currentState == null) return;
+      _calendarKey.currentState!.refreshAllData();
+    }
   }
 }
