@@ -12,9 +12,12 @@ class AppLogo extends StatelessWidget {
       width: 80,
       height: 80,
       decoration: BoxDecoration(
-        color: colors.primaryContainer,
+        color: colors.primaryContainer.withValues(alpha: 0.3),
         shape: .circle,
-        border: .all(width: 1, color: colors.onPrimaryContainer),
+        border: .all(
+          width: 1,
+          color: colors.onPrimaryContainer.withValues(alpha: 0.3),
+        ),
       ),
       child: ClipOval(
         child: Image.asset(
@@ -23,6 +26,8 @@ class AppLogo extends StatelessWidget {
           height: 80,
           fit: .contain,
           errorBuilder: (context, error, stackTrace) => Icon(Icons.pets),
+          colorBlendMode: .srcIn,
+          color: colors.primary,
         ),
       ),
     );

@@ -188,7 +188,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
         Container(
           decoration: BoxDecoration(
             color: colors.surfaceContainerLow,
-            borderRadius: .vertical(bottom: .circular(16)),
+            borderRadius: .all(.circular(16)),
           ),
           child: tableCalendar,
         ),

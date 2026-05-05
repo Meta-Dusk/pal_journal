@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/screens/home_screen.dart';
-import 'package:pal_journal/components/pnl_calendar/pnl_calendar.dart';
-import 'package:pal_journal/screens/settings/settings_screen.dart';
+import '../components/pnl_calendar/pnl_main_calendar_view.dart';
+import 'home_screen.dart';
+import 'settings/settings_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -32,7 +32,7 @@ class _MainLayoutState extends State<MainLayout> {
     final colors = Theme.of(context).colorScheme;
     final List<Widget> screens = [
       const HomeScreen(),
-      const PnLCalendar(),
+      const PnLMainCalendarView(),
       const SettingsScreen(),
     ];
 
