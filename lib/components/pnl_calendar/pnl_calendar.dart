@@ -289,7 +289,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
       progress = target > 0 ? (currentValue / target).clamp(0.0, 1.0) : 0.0;
       if (currentValue < 0) progress = 0.0;
       isGoalMet = currentValue >= target;
-      barColor = isGoalMet ? Colors.greenAccent : colors.primary;
+      barColor = isGoalMet ? colors.primary : colors.error;
       valueText =
           "$symbol${_getCurrency(currentValue)} "
           "/ $symbol${_getCurrency(target)}";

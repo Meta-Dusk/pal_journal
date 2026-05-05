@@ -1,7 +1,7 @@
 name: pal_journal
 description: "An App for Visually Tracking your Finances."
 publish_to: "none"
-version: 0.11.4+1
+version: 0.11.5+1
 
 environment:
     sdk: ^3.11.3
