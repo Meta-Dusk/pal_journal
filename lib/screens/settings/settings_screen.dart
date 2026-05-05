@@ -2,8 +2,8 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:pal_journal/services/auth_service.dart';
-import './cloud_sync_card.dart';
-import './subcomponents/list_tiles.dart';
+import 'cloud_sync_card.dart';
+import 'subcomponents/settings_list_tiles.dart';
 import 'smart_auth_menu.dart';
 
 class SettingsScreen extends StatelessWidget {

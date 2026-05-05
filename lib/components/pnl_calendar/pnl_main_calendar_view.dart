@@ -77,7 +77,7 @@ class _PnLMainCalendarViewState extends State<PnLMainCalendarView> {
   Widget _buildCurrentView() {
     switch (_currentView) {
       case .daily:
-        return PnLCalendar(key: widget.calendarKey);
+        return PnLCalendar(key: widget.calendarKey ?? ValueKey('daily'));
       case .monthly:
         return const PnLMonthlyView(key: ValueKey('monthly'));
       case .yearly:

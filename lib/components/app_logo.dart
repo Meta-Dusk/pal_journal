@@ -12,10 +12,10 @@ class AppLogo extends StatelessWidget {
       width: 80,
       height: 80,
       decoration: BoxDecoration(
-        color: colors.primaryContainer.withValues(alpha: 0.3),
+        color: Colors.transparent,
         shape: .circle,
         border: .all(
-          width: 1,
+          width: 2,
           color: colors.onPrimaryContainer.withValues(alpha: 0.3),
         ),
       ),

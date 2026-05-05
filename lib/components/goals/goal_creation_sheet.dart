@@ -4,7 +4,9 @@ import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/services/isar_service.dart';
 
 class GoalCreationSheet extends StatefulWidget {
-  const GoalCreationSheet({super.key});
+  const GoalCreationSheet({super.key, this.existingGoal});
+
+  final QuantifiedGoal? existingGoal;
 
   @override
   State<GoalCreationSheet> createState() => _GoalCreationSheetState();
@@ -18,32 +20,43 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
   bool _isPinned = false;
   GoalValueType _valueType = .integer;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingGoal != null) {
+      _titleController.text = widget.existingGoal!.title;
+      _targetController.text = widget.existingGoal!.targetValue.toString();
+      _unitController.text = widget.existingGoal!.unit;
+      _selectedDate = widget.existingGoal!.deadline;
+      _isPinned = widget.existingGoal!.isPinned;
+      _valueType = widget.existingGoal!.valueType;
+    }
+  }
+
   Future<void> _saveGoal() async {
     if (_titleController.text.isEmpty || _targetController.text.isEmpty) return;
 
-    final newGoal = QuantifiedGoal()
+    final goalToSave = widget.existingGoal ?? QuantifiedGoal();
+
+    goalToSave
       ..title = _titleController.text
       ..targetValue = double.tryParse(_targetController.text) ?? 0
       ..unit = _unitController.text
       ..deadline = _selectedDate
       ..isPinned = _isPinned
-      ..valueType = _valueType
-      ..currentValue = 0
-      ..isCompleted = false;
+      ..valueType = _valueType;
 
-    await IsarService().saveQuantifiedGoal(newGoal);
+    await IsarService().saveQuantifiedGoal(goalToSave);
     if (mounted) Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     final mainContent = [
-      Text(
-        "Track a New Item",
-        style: Theme.of(context).textTheme.headlineSmall,
-      ),
+      Text("Track a New Item", style: textTheme.headlineSmall),
       const SizedBox(height: 20),
       Text(
         "Quantity Type",
@@ -73,7 +86,9 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
         width: double.infinity,
         child: FilledButton(
           onPressed: _saveGoal,
-          child: const Text("Create Goal"),
+          child: Text(
+            widget.existingGoal == null ? "Create Goal" : "Update Goal",
+          ),
         ),
       ),
       const SizedBox(height: 20),
@@ -100,12 +115,12 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
       child: SegmentedButton<GoalValueType>(
         segments: const [
           ButtonSegment(
-            value: GoalValueType.integer,
+            value: .integer,
             label: Text("Integer (1, 2, 3)"),
             icon: Icon(Icons.pin_outlined),
           ),
           ButtonSegment(
-            value: GoalValueType.decimal,
+            value: .decimal,
             label: Text("Decimal (1.5, 2.0)"),
             icon: Icon(Icons.precision_manufacturing_outlined),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pal_journal/components/goals/goal_creation_sheet.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/services/isar_service.dart';
 
@@ -18,11 +19,9 @@ class InventoryLogView extends StatelessWidget {
   }
 
   Widget futureBuilder(
-    BuildContext context,
+    BuildContext _,
     AsyncSnapshot<List<QuantifiedGoal>> snapshot,
   ) {
-    final colors = Theme.of(context).colorScheme;
-
     if (!snapshot.hasData) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -37,32 +36,85 @@ class InventoryLogView extends StatelessWidget {
       itemCount: completed.length,
       itemBuilder: (context, index) {
         final goal = completed[index];
-        return Dismissible(
-          key: Key('archive_${goal.id}'),
-          direction: .startToEnd,
-          background: Container(
-            alignment: .centerLeft,
-            padding: const .only(left: 20),
-            margin: const .only(bottom: 12),
-            color: colors.error,
-            child: Icon(Icons.delete, color: colors.onError),
-          ),
-          confirmDismiss: (_) {
-            return showDialog<bool>(
-              context: context,
-              builder: (_) => ConfirmationDialog(goal: goal),
-            );
-          },
-          onDismissed: (_) async {
-            await IsarService().deleteQuantifiedGoal(goal.id);
-          },
-          child: Card(
-            margin: const .only(bottom: 12),
-            child: ListTileItemLog(goal: goal),
-          ),
-        );
+        return DismissibleLogEntry(goal: goal);
       },
     );
+  }
+}
+
+class DismissibleLogEntry extends StatelessWidget {
+  const DismissibleLogEntry({super.key, required this.goal});
+
+  final QuantifiedGoal goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Dismissible(
+      key: Key('archive_${goal.id}'),
+      direction: .horizontal,
+      // Background (Swipe Right -> Edit)
+      background: Container(
+        alignment: .centerLeft,
+        padding: const .only(left: 20),
+        margin: const .only(bottom: 12),
+        decoration: BoxDecoration(
+          color: colors.primaryContainer,
+          borderRadius: .horizontal(left: .circular(16)),
+        ),
+        child: Icon(Icons.edit, color: colors.onPrimaryContainer),
+      ),
+      // Secondary Background (Swipe Left -> Delete)
+      secondaryBackground: Container(
+        alignment: .centerRight,
+        padding: const .only(right: 20),
+        margin: const .only(bottom: 12),
+        decoration: BoxDecoration(
+          color: colors.error,
+          borderRadius: .horizontal(right: .circular(16)),
+        ),
+        child: Icon(Icons.delete, color: colors.onError),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == .startToEnd) {
+          _showEditGoalDialog(context, goal);
+          return false;
+        } else {
+          return await showDialog<bool>(
+            context: context,
+            builder: (_) => ConfirmationDialog(goal: goal),
+          );
+        }
+      },
+      onDismissed: (_) async {
+        await IsarService().deleteQuantifiedGoal(goal.id);
+      },
+      child: Card(
+        margin: const .only(bottom: 12),
+        child: ListTileItemLog(goal: goal),
+      ),
+    );
+  }
+
+  void _showEditGoalDialog(BuildContext context, QuantifiedGoal goal) async {
+    final bool? didChange = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: .circular(24)),
+        ),
+        child: GoalCreationSheet(existingGoal: goal),
+      ),
+    );
+
+    if (didChange == true) {
+      // Trigger a rebuild of the Inventory Log to show updated data
+      (context as Element).markNeedsBuild();
+    }
   }
 }
 
