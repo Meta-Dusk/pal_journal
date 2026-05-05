@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:pal_journal/models/monthly_goal.dart';
@@ -20,13 +21,14 @@ class _PnLCalendarState extends State<PnLCalendar> {
   DateTime? _selectedDay;
   Map<DateTime, PnLEntry> _dailyEntries = {};
   MonthlyGoal? _currentMonthGoal;
+  Map<DateTime, List<QuantifiedGoal>> _goalDeadlines = {};
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
     _loadMonthGoal(_focusedDay);
-    _loadPnLData();
+    _loadAllData();
   }
 
   // --- THE NEW SPLIT MATH ENGINE ---
@@ -55,6 +57,9 @@ class _PnLCalendarState extends State<PnLCalendar> {
         entry.amount > 0;
   }
 
+  DateTime _normalizeDate(DateTime date) =>
+      DateTime.utc(date.year, date.month, date.day);
+
   /// Profit naturally goes up and down via algebraic Net PnL!
   /// Returns the true algebraic Net PnL.
   double get _netProfit => _monthlyIncome - _monthlyExpenses;
@@ -67,12 +72,8 @@ class _PnLCalendarState extends State<PnLCalendar> {
   Future<void> _loadPnLData() async {
     final entries = await IsarService().getAllEntries();
     final Map<DateTime, PnLEntry> loadedData = {};
-    for (var entry in entries) {
-      final normalizedDate = DateTime.utc(
-        entry.date.year,
-        entry.date.month,
-        entry.date.day,
-      );
+    for (PnLEntry entry in entries) {
+      final normalizedDate = _normalizeDate(entry.date);
       loadedData[normalizedDate] = entry;
     }
 
@@ -80,15 +81,27 @@ class _PnLCalendarState extends State<PnLCalendar> {
     setState(() => _dailyEntries = loadedData);
   }
 
-  PnLEntry? _getEntryForDay(DateTime day) {
-    final normalizedDay = DateTime.utc(day.year, day.month, day.day);
-    return _dailyEntries[normalizedDay];
+  Future<void> _loadAllData() async {
+    await _loadPnLData();
+    final allGoals = await IsarService().getAllQuantifiedGoals();
+    final Map<DateTime, List<QuantifiedGoal>> loadedGoals = {};
+
+    for (QuantifiedGoal goal in allGoals) {
+      final normalizedDate = _normalizeDate(goal.deadline);
+      loadedGoals.putIfAbsent(normalizedDate, () => []).add(goal);
+    }
+
+    if (!mounted) return;
+    setState(() => _goalDeadlines = loadedGoals);
   }
+
+  PnLEntry? _getEntryForDay(DateTime day) => _dailyEntries[_normalizeDate(day)];
+
+  List<QuantifiedGoal>? _getQuantifiedGoalForDay(DateTime day) =>
+      _goalDeadlines[_normalizeDate(day)];
 
   /// Opens the read-only view
   void _openDetailsSheet(DateTime day) {
-    final entry = _getEntryForDay(day);
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -96,12 +109,24 @@ class _PnLCalendarState extends State<PnLCalendar> {
       shape: const RoundedRectangleBorder(
         borderRadius: .vertical(top: .circular(20)),
       ),
-      builder: (context) => DetailsSheet(
-        day: day,
-        entry: entry,
-        onEditPressed: () {
-          Navigator.pop(context); // Close details
-          _openEditSheet(day); // Open editor immediately
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final entry = _getEntryForDay(day);
+          final goals = _getQuantifiedGoalForDay(day);
+
+          return DetailsSheet(
+            day: day,
+            entry: entry,
+            goals: goals,
+            onEditPressed: () {
+              Navigator.pop(context);
+              _openEditSheet(day);
+            },
+            onRefresh: () async {
+              await _loadAllData();
+              setSheetState(() {});
+            },
+          );
         },
       ),
     );
@@ -122,7 +147,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
     );
 
     //? If the widget popped with 'true', the user saved or reset data
-    if (didDataChange == true) await _loadPnLData();
+    if (didDataChange == true) await _loadAllData();
   }
 
   void _openMonthSettings() async {
@@ -132,7 +157,7 @@ class _PnLCalendarState extends State<PnLCalendar> {
     );
 
     await _loadMonthGoal(_focusedDay);
-    if (shouldClearMonth == true) await _loadPnLData();
+    if (shouldClearMonth == true) await _loadAllData();
   }
 
   @override
@@ -233,14 +258,22 @@ class _PnLCalendarState extends State<PnLCalendar> {
           child: Row(mainAxisSize: .min, children: mainContent),
         );
       },
-      defaultBuilder: (context, day, focusedDay) =>
-          CustomDayCell(day: day, entry: _getEntryForDay(day)),
-      todayBuilder: (context, day, focusedDay) =>
-          CustomDayCell(day: day, entry: _getEntryForDay(day), isToday: true),
+      defaultBuilder: (context, day, focusedDay) => CustomDayCell(
+        day: day,
+        entry: _getEntryForDay(day),
+        hasGoal: _checkHasGoal(day),
+      ),
+      todayBuilder: (context, day, focusedDay) => CustomDayCell(
+        day: day,
+        entry: _getEntryForDay(day),
+        isToday: true,
+        hasGoal: _checkHasGoal(day),
+      ),
       selectedBuilder: (context, day, focusedDay) => CustomDayCell(
         day: day,
         entry: _getEntryForDay(day),
         isSelected: true,
+        hasGoal: _checkHasGoal(day),
       ),
       outsideBuilder: (context, day, focusedDay) => Center(
         child: Text(
@@ -250,6 +283,9 @@ class _PnLCalendarState extends State<PnLCalendar> {
       ),
     );
   }
+
+  bool _checkHasGoal(DateTime day) =>
+      _goalDeadlines[_normalizeDate(day)]?.isNotEmpty ?? false;
 
   Widget buildMonthlyGoalIndicator(ColorScheme colors) {
     if (_currentMonthGoal == null) return const SizedBox.shrink();

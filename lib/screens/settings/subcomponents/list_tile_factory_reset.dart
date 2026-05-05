@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
+import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pal_journal/main.dart';
 
@@ -46,6 +47,7 @@ class ListTileFactoryReset extends StatelessWidget {
     await isar.writeTxn(() async {
       await isar.collection<PnLEntry>().clear();
       await isar.collection<MonthlyGoal>().clear();
+      await isar.collection<QuantifiedGoal>().clear();
     });
 
     if (!context.mounted) return;

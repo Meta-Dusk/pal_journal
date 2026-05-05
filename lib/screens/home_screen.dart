@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pal_journal/components/app_logo.dart';
+import 'package:pal_journal/components/goals/goal_progress_card.dart';
 import 'package:pal_journal/components/pnl_filter_card.dart';
 
 import 'package:pal_journal/main.dart';
+import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
 import 'package:pal_journal/services/currency/currency_service.dart';
+import 'package:pal_journal/services/isar_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,10 +24,13 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _gradientController;
   late Animation<double> _breathingAnimation;
 
+  List<QuantifiedGoal> _pinnedGoals = [];
+
   @override
   void initState() {
     super.initState();
     _loadLifetimeData();
+    _loadGoals();
 
     // Initialize the breathing animation
     _gradientController = AnimationController(
@@ -42,6 +48,11 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     _gradientController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadGoals() async {
+    final goals = await IsarService().getPinnedGoals();
+    setState(() => _pinnedGoals = goals);
   }
 
   Future<void> _loadLifetimeData() async {
@@ -86,6 +97,23 @@ class _HomeScreenState extends State<HomeScreen>
       child: hero,
     );
 
+    final pinnedGoals = [
+      Text("Pinned Goals", style: TextStyle(fontSize: 20, fontWeight: .bold)),
+      const SizedBox(height: 12),
+      ..._pinnedGoals.map(
+        (goal) => Padding(
+          padding: const .only(bottom: 12.0),
+          child: GoalProgressCard(
+            goal: goal,
+            onUpdate: () async {
+              // Handle increments here
+              await _loadGoals();
+            },
+          ),
+        ),
+      ),
+    ];
+
     final mainContent = [
       Text(
         "Overview",
@@ -99,6 +127,8 @@ class _HomeScreenState extends State<HomeScreen>
       heroTransitionHandler,
       const SizedBox(height: 16),
       const PnLFilterCard(),
+      const SizedBox(height: 24),
+      if (_pinnedGoals.isNotEmpty) ...pinnedGoals,
     ];
 
     return SingleChildScrollView(

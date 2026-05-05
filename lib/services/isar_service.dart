@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'package:pal_journal/models/monthly_goal.dart';
+import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 
@@ -19,10 +20,13 @@ class IsarService {
       return await Isar.open([
         PnLEntrySchema,
         MonthlyGoalSchema,
+        QuantifiedGoalSchema,
       ], directory: dir.path);
     }
     return Future.value(Isar.getInstance());
   }
+
+  // --- PNL ENTRIES ---
 
   /// Saves a new daily PnL entry.
   Future<void> savePnL(
@@ -174,6 +178,42 @@ class IsarService {
     await isar.writeTxn(() async {
       await isar.collection<MonthlyGoal>().clear();
       await isar.collection<MonthlyGoal>().putAll(goals);
+    });
+  }
+
+  // --- QUANTIFIED GOALS ---
+
+  /// Saves or updates a quantized goal.
+  Future<void> saveQuantifiedGoal(QuantifiedGoal goal) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.quantifiedGoals.put(goal);
+    });
+  }
+
+  /// Retrieves all pinned quantized goals.
+  Future<List<QuantifiedGoal>> getPinnedGoals() async {
+    final isar = await db;
+    return await isar.quantifiedGoals.filter().isPinnedEqualTo(true).findAll();
+  }
+
+  Future<void> replaceAllQuantifiedGoals(List<QuantifiedGoal> goals) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.collection<QuantifiedGoal>().clear();
+      await isar.collection<QuantifiedGoal>().putAll(goals);
+    });
+  }
+
+  Future<List<QuantifiedGoal>> getAllQuantifiedGoals() async {
+    final isar = await db;
+    return await isar.collection<QuantifiedGoal>().where().findAll();
+  }
+
+  Future<void> deleteQuantifiedGoal(Id id) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      await isar.quantifiedGoals.delete(id);
     });
   }
 }

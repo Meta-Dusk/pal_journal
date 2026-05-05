@@ -8,6 +8,7 @@ class CustomDayCell extends StatelessWidget {
   final PnLEntry? entry;
   final bool isToday;
   final bool isSelected;
+  final bool hasGoal;
 
   const CustomDayCell({
     super.key,
@@ -15,6 +16,7 @@ class CustomDayCell extends StatelessWidget {
     this.entry,
     this.isToday = false,
     this.isSelected = false,
+    this.hasGoal = false,
   });
 
   @override
@@ -58,6 +60,26 @@ class CustomDayCell extends StatelessWidget {
       ],
     ];
 
+    final subContent = [
+      Text(
+        '${day.day}',
+        style: TextStyle(
+          color: isSelected ? colors.onPrimaryContainer : colors.onSurface,
+          fontWeight: .bold,
+          fontSize: 16,
+        ),
+      ),
+      const SizedBox(height: 2),
+      Padding(
+        padding: const .symmetric(horizontal: 2.0),
+        child: Row(
+          mainAxisAlignment: .center,
+          mainAxisSize: .min,
+          children: mainContent,
+        ),
+      ),
+    ];
+
     return Container(
       margin: const .all(4.0),
       decoration: BoxDecoration(
@@ -67,26 +89,30 @@ class CustomDayCell extends StatelessWidget {
             ? Border.all(color: colors.primary, width: 1)
             : null,
       ),
-      child: Column(
-        mainAxisAlignment: .center,
+      child: Stack(
+        alignment: .center,
         children: [
-          Text(
-            '${day.day}',
-            style: TextStyle(
-              color: isSelected ? colors.onPrimaryContainer : colors.onSurface,
-              fontWeight: .bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Padding(
-            padding: const .symmetric(horizontal: 2.0),
-            child: Row(
-              mainAxisAlignment: .center,
-              mainAxisSize: .min,
-              children: mainContent,
-            ),
-          ),
+          Column(mainAxisAlignment: .center, children: subContent),
+          if (hasGoal) Positioned(top: 24, child: GoalIndicator()),
+        ],
+      ),
+    );
+  }
+}
+
+class GoalIndicator extends StatelessWidget {
+  const GoalIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: 16,
+      height: 1,
+      decoration: BoxDecoration(
+        color: colors.tertiary,
+        boxShadow: [
+          BoxShadow(color: colors.shadow.withValues(alpha: 0.2), blurRadius: 2),
         ],
       ),
     );

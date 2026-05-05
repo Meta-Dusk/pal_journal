@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/components/goals/goal_creation_sheet.dart';
 import '../components/pnl_calendar/pnl_main_calendar_view.dart';
 import 'home_screen.dart';
 import 'settings/settings_screen.dart';
@@ -12,6 +13,7 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
+  int _homeKeyTrigger = 0;
   late PageController _pageController;
 
   @override
@@ -31,7 +33,7 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final List<Widget> screens = [
-      const HomeScreen(),
+      HomeScreen(key: ValueKey('home_$_homeKeyTrigger')),
       const PnLMainCalendarView(),
       const SettingsScreen(),
     ];
@@ -76,6 +78,43 @@ class _MainLayoutState extends State<MainLayout> {
         },
         items: navBarItems,
       ),
+      floatingActionButton: _currentIndex == 2 ? null : getFAB(colors, context),
     );
+  }
+
+  FloatingActionButton getFAB(ColorScheme colors, BuildContext context) {
+    return FloatingActionButton(
+      backgroundColor: colors.primary,
+      onPressed: () {
+        if (_currentIndex == 0) {
+          _showGoalCreation(context);
+        } else if (_currentIndex == 1) {
+          // You could trigger a new PnL entry here if you wanted!
+        }
+      },
+      child: Icon(
+        _currentIndex == 0 ? Icons.add_task : Icons.add,
+        color: colors.onPrimary,
+      ),
+    );
+  }
+
+  void _showGoalCreation(BuildContext context) async {
+    final bool? didChange = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const .vertical(top: .circular(24)),
+        ),
+        child: const GoalCreationSheet(),
+      ),
+    );
+
+    if (didChange == true) {
+      setState(() => _homeKeyTrigger++);
+    }
   }
 }
