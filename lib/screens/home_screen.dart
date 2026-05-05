@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/components/app_logo.dart';
 import 'package:pal_journal/components/pnl_filter_card.dart';
 
 import 'package:pal_journal/main.dart';
 import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
 import 'package:pal_journal/services/currency/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
-import 'package:pal_journal/core/images.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -196,24 +196,6 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
 
-    final image = Image.asset(
-      ImageAssets.icon,
-      width: 80,
-      height: 80,
-      fit: .contain,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: accentColor.withValues(alpha: 0.1),
-            shape: .circle,
-          ),
-          child: Icon(Icons.pets, color: accentColor, size: 40),
-        );
-      },
-    );
-
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
       child: Column(
@@ -222,7 +204,11 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           Row(
             crossAxisAlignment: .center,
-            children: [lifetimeNetPnlText, const SizedBox(width: 16), image],
+            children: [
+              lifetimeNetPnlText,
+              const SizedBox(width: 16),
+              AppLogo(),
+            ],
           ),
           const SizedBox(height: 16),
           Row(

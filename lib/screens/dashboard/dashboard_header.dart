@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pal_journal/components/app_logo.dart';
 import 'package:pal_journal/services/currency/currency_service.dart';
 import 'package:pal_journal/utils/formatters.dart';
-import 'package:pal_journal/core/images.dart';
 
 class DashboardHeader extends StatefulWidget {
   final double totalAmount;
@@ -102,27 +102,7 @@ class _DashboardHeaderState extends State<DashboardHeader>
     final mainContent = [
       Row(
         crossAxisAlignment: .center,
-        children: [
-          lifetimeNetPnlText,
-          const SizedBox(width: 16),
-          Image.asset(
-            ImageAssets.icon,
-            width: 80,
-            height: 80,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  shape: .circle,
-                ),
-                child: Icon(Icons.pets, color: accentColor, size: 40),
-              );
-            },
-          ),
-        ],
+        children: [lifetimeNetPnlText, const SizedBox(width: 16), AppLogo()],
       ),
       const SizedBox(height: 16),
       Opacity(
@@ -156,36 +136,37 @@ class _DashboardHeaderState extends State<DashboardHeader>
       animation: _breathingAnimation,
       builder: (context, child) {
         final alignShift = (_breathingAnimation.value * 0.5) - 0.25;
-
+        final gradientColors = [
+          colors.surfaceContainer,
+          Color.lerp(
+            colors.surfaceContainer,
+            accentColor.withValues(alpha: 0.15),
+            _breathingAnimation.value,
+          )!,
+          colors.surfaceContainerHighest,
+        ];
+        final boxDecoration = BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment(alignShift - 1.0, -1.0),
+            end: Alignment(alignShift + 1.0, 1.0),
+          ),
+          borderRadius: .circular(24),
+          border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(
+                alpha: 0.05 + (_breathingAnimation.value * 0.05),
+              ),
+              blurRadius: 20 + (_breathingAnimation.value * 10),
+              offset: const Offset(0, 10),
+            ),
+          ],
+        );
         return Container(
           width: double.infinity,
           padding: const .all(24),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colors.surfaceContainer,
-                Color.lerp(
-                  colors.surfaceContainer,
-                  accentColor.withValues(alpha: 0.15),
-                  _breathingAnimation.value,
-                )!,
-                colors.surfaceContainerHighest,
-              ],
-              begin: Alignment(alignShift - 1.0, -1.0),
-              end: Alignment(alignShift + 1.0, 1.0),
-            ),
-            borderRadius: .circular(24),
-            border: .all(color: accentColor.withValues(alpha: 0.3), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: accentColor.withValues(
-                  alpha: 0.05 + (_breathingAnimation.value * 0.05),
-                ),
-                blurRadius: 20 + (_breathingAnimation.value * 10),
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
+          decoration: boxDecoration,
           child: child,
         );
       },

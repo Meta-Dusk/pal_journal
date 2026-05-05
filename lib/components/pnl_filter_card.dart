@@ -27,6 +27,12 @@ class _PnLFilterCardState extends State<PnLFilterCard> {
     _calculatePnL();
   }
 
+  static String _formattedDate(DateTime date) =>
+      DateFormat('MMM d, yyyy').format(date);
+
+  static DateTime _getEndDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day, 23, 59, 59);
+
   Future<void> _calculatePnL() async {
     final now = DateTime.now();
     DateTime start;
@@ -49,7 +55,7 @@ class _PnLFilterCardState extends State<PnLFilterCard> {
         break;
       case .custom:
         start = _customStart ?? DateTime(now.year, now.month, 1);
-        end = _customEnd ?? DateTime(now.year, now.month, now.day, 23, 59, 59);
+        end = _customEnd ?? _getEndDate(now);
         break;
     }
 
@@ -71,7 +77,7 @@ class _PnLFilterCardState extends State<PnLFilterCard> {
   Future<void> _pickCustomRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      firstDate: DateTime(2020),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       initialDateRange: _customStart != null && _customEnd != null
           ? DateTimeRange(start: _customStart!, end: _customEnd!)
@@ -82,21 +88,11 @@ class _PnLFilterCardState extends State<PnLFilterCard> {
     setState(() {
       _customStart = picked.start;
       //? Ensure end date covers the full final day
-      _customEnd = DateTime(
-        picked.end.year,
-        picked.end.month,
-        picked.end.day,
-        23,
-        59,
-        59,
-      );
+      _customEnd = _getEndDate(picked.end);
       _selectedFilter = .custom;
     });
     _calculatePnL();
   }
-
-  static String _formattedDate(DateTime date) =>
-      DateFormat('MMM d, yyyy').format(date);
 
   @override
   Widget build(BuildContext context) {
@@ -136,15 +132,18 @@ class _PnLFilterCardState extends State<PnLFilterCard> {
       ),
     ];
 
-    return Card(
-      shape: const RoundedRectangleBorder(borderRadius: .all(.circular(16))),
-      surfaceTintColor: colors.onSurface,
-      shadowColor: colors.shadow,
-      elevation: 2,
-      child: Padding(
-        padding: const .all(16.0),
-        child: Column(children: mainContent),
+    return Container(
+      width: double.infinity,
+      padding: const .all(24),
+      decoration: BoxDecoration(
+        color: colors.tertiaryContainer.withValues(alpha: 0.3),
+        borderRadius: .circular(24),
+        border: .all(
+          color: colors.onTertiaryContainer.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
+      child: Column(children: mainContent),
     );
   }
 
@@ -152,13 +151,13 @@ class _PnLFilterCardState extends State<PnLFilterCard> {
     return PopupMenuButton<PnLFilter>(
       icon: const Icon(Icons.filter_list),
       onSelected: (filter) => _onSelected(filter),
-      itemBuilder: (context) => [
-        const PopupMenuItem(value: .today, child: Text("Today")),
-        const PopupMenuItem(value: .thisWeek, child: Text("This Week")),
-        const PopupMenuItem(value: .thisMonth, child: Text("This Month")),
-        const PopupMenuItem(value: .thisYear, child: Text("This Year")),
-        const PopupMenuDivider(),
-        const PopupMenuItem(value: .custom, child: Text("Custom Range...")),
+      itemBuilder: (context) => const [
+        PopupMenuItem(value: .today, child: Text("Today")),
+        PopupMenuItem(value: .thisWeek, child: Text("This Week")),
+        PopupMenuItem(value: .thisMonth, child: Text("This Month")),
+        PopupMenuItem(value: .thisYear, child: Text("This Year")),
+        PopupMenuDivider(),
+        PopupMenuItem(value: .custom, child: Text("Custom Range...")),
       ],
     );
   }

@@ -1,3 +1,3 @@
 class ImageAssets {
-  static const String icon = "assets/images/icon_transparent.png";
+  static const String icon = "assets/images/cat_transparent.png";
 }
