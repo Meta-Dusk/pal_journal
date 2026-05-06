@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pal_journal/screens/auth/auth_screen.dart';
@@ -34,7 +36,7 @@ class LoggedInView extends StatelessWidget {
 
     return ListTile(
       leading: Icon(Icons.person_outline, color: colors.primary),
-      title: const Text("Account Settings"),
+      title: Text(Platform.isWindows ? "Account" : "Account Settings"),
       subtitle: Text(user?.email ?? "Signed In"),
       trailing: TextButton(
         onPressed: () => AuthService.signOut(),

@@ -13,8 +13,10 @@ class CloudSyncCard extends StatefulWidget {
 
 class _CloudSyncCardState extends State<CloudSyncCard> {
   bool _isLoading = false;
+  String _lastSyncDate = "Never";
 
-  bool showWarningOnWindows() {
+  /// Make sure to cancel all FireBase operations on Windows.
+  bool _windowsWarningCheck() {
     if (Platform.isWindows) {
       _showMessage(
         "Data syncing is temporarily disabled on Windows due to an SDK bug."
@@ -28,26 +30,38 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
 
   // --- BACKUP LOGIC ---
   Future<void> _handleBackup() async {
-    if (showWarningOnWindows()) return;
+    if (_windowsWarningCheck()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final entries = await IsarService().getAllEntries();
+      final isar = IsarService();
 
-      if (entries.isEmpty) {
-        _showMessage("Nothing to backup. Your local ledger is empty.");
+      // Fetch for all categories
+      final pnlEntries = await isar.getAllEntries();
+      final quantifiedGoals = await isar.getAllQuantifiedGoals();
+      final monthlyGoals = await isar.getAllGoals();
+
+      if (pnlEntries.isEmpty &&
+          quantifiedGoals.isEmpty &&
+          monthlyGoals.isEmpty) {
+        _showMessage("Nothing to backup. All local categories are empty.");
         return;
       }
 
+      final totalItems =
+          pnlEntries.length + quantifiedGoals.length + monthlyGoals.length;
+
       // Push to Firestore
-      final error = await SyncService.backupToCloud(entries);
+      final error = await SyncService.backupAllDataToCloud();
+      await SyncService.updateLastSyncTimestamp();
+      _lastSyncDate = await SyncService.getLastSyncDisplay();
 
       if (!mounted) return;
 
       if (error == null) {
         _showMessage(
-          "Successfully backed up ${entries.length} entries to the cloud!",
+          "Successfully backed up $totalItems entries to the cloud!",
           isError: false,
         );
       } else {
@@ -62,7 +76,7 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
 
   // --- RESTORE LOGIC ---
   Future<void> _handleRestore() async {
-    if (showWarningOnWindows()) return;
+    if (_windowsWarningCheck()) return;
 
     final confirmed = await _confirmRestore();
     if (!confirmed) return;
@@ -70,23 +84,25 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
     setState(() => _isLoading = true);
 
     try {
-      final cloudEntries = await SyncService.restoreFromCloud();
+      final cloudData = await SyncService.restoreAllDataFromCloud();
 
-      if (!mounted) return;
-
-      if (cloudEntries == null || cloudEntries.isEmpty) {
+      if (cloudData == null || cloudData.isEmpty) {
         _showMessage("No cloud data found to restore.");
         return;
       }
 
-      await IsarService().replaceAllEntries(cloudEntries);
+      final totalItems =
+          (cloudData[CloudData.pnl]?.length ?? 0) +
+          (cloudData[CloudData.quantified]?.length ?? 0) +
+          (cloudData[CloudData.monthly]?.length ?? 0);
 
-      if (mounted) {
-        _showMessage(
-          "Successfully restored ${cloudEntries.length} entries from the cloud!",
-          isError: false,
-        );
-      }
+      await IsarService().performFullRestore(cloudData);
+
+      if (!mounted) return;
+      _showMessage(
+        "Successfully restored $totalItems entries from the cloud!",
+        isError: false,
+      );
     } catch (e) {
       if (mounted) _showMessage("Restore failed: $e", isError: true);
     } finally {
@@ -119,7 +135,7 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
 
     return ValueListenableBuilder(
       valueListenable: AuthService.currentUserNotifier,
-      builder: (context, user, _) {
+      builder: (_, user, _) {
         if (user == null) return const SizedBox.shrink();
 
         final actionButtons = [
@@ -143,7 +159,7 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
         ];
 
         final mainContent = [
-          contentLabel(colors),
+          _contentLabel(colors),
           const SizedBox(height: 24),
 
           if (_isLoading)
@@ -160,18 +176,28 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
     );
   }
 
-  Row contentLabel(ColorScheme colors) {
+  Row _contentLabel(ColorScheme colors) {
+    final leadingContent = [
+      Icon(Icons.cloud_sync, color: colors.primary),
+      const SizedBox(width: 12),
+      Text(
+        "Data Synchronization",
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: .bold,
+          color: colors.onSurface,
+        ),
+      ),
+    ];
+
     return Row(
+      mainAxisAlignment: .spaceBetween,
       children: [
-        Icon(Icons.cloud_sync, color: colors.primary),
+        Row(children: leadingContent),
         const SizedBox(width: 12),
         Text(
-          "Data Synchronization",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: .bold,
-            color: colors.onSurface,
-          ),
+          "Last Synced: $_lastSyncDate",
+          style: TextStyle(fontSize: 16, color: colors.onSurfaceVariant),
         ),
       ],
     );

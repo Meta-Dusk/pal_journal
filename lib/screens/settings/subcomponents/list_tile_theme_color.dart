@@ -11,7 +11,7 @@ class ListTileThemeColor extends StatelessWidget {
 
     return ValueListenableBuilder<Color>(
       valueListenable: ThemeService.seedColorNotifier,
-      builder: (context, currentColor, child) {
+      builder: (context, currentColor, _) {
         return ListTile(
           tileColor: colors.surfaceContainer,
           leading: Icon(Icons.palette, color: colors.primary),

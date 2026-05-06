@@ -54,6 +54,7 @@ class DismissibleLogEntry extends StatelessWidget {
     return Dismissible(
       key: Key('archive_${goal.id}'),
       direction: .horizontal,
+
       // Background (Swipe Right -> Edit)
       background: Container(
         alignment: .centerLeft,
@@ -65,6 +66,7 @@ class DismissibleLogEntry extends StatelessWidget {
         ),
         child: Icon(Icons.edit, color: colors.onPrimaryContainer),
       ),
+
       // Secondary Background (Swipe Left -> Delete)
       secondaryBackground: Container(
         alignment: .centerRight,
@@ -76,6 +78,7 @@ class DismissibleLogEntry extends StatelessWidget {
         ),
         child: Icon(Icons.delete, color: colors.onError),
       ),
+
       confirmDismiss: (direction) async {
         if (direction == .startToEnd) {
           _showEditGoalDialog(context, goal);
@@ -111,10 +114,8 @@ class DismissibleLogEntry extends StatelessWidget {
       ),
     );
 
-    if (didChange == true) {
-      // Trigger a rebuild of the Inventory Log to show updated data
-      (context as Element).markNeedsBuild();
-    }
+    // Trigger a rebuild of the Inventory Log to show updated data
+    if (didChange == true) (context as Element).markNeedsBuild();
   }
 }
 

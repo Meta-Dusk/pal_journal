@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:pal_journal/components/app_logo.dart';
 import 'package:pal_journal/components/goals/goal_progress_card.dart';
 import 'package:pal_journal/components/pnl_filter_card.dart';
-
 import 'package:pal_journal/main.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/screens/dashboard/dashboard_screen.dart';
@@ -105,10 +104,7 @@ class _HomeScreenState extends State<HomeScreen>
           padding: const .only(bottom: 12.0),
           child: GoalProgressCard(
             goal: goal,
-            onUpdate: () async {
-              // Handle increments here
-              await _loadGoals();
-            },
+            onUpdate: () async => await _loadGoals(),
           ),
         ),
       ),
@@ -226,32 +222,30 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
 
+    final mainContent = [
+      Row(
+        crossAxisAlignment: .center,
+        children: [lifetimeNetPnlText, const SizedBox(width: 16), AppLogo()],
+      ),
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          Text(
+            "Tap for detailed analytics",
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+          ),
+          const Spacer(),
+          Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
+        ],
+      ),
+    ];
+
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
       child: Column(
         crossAxisAlignment: .start,
         mainAxisSize: .min,
-        children: [
-          Row(
-            crossAxisAlignment: .center,
-            children: [
-              lifetimeNetPnlText,
-              const SizedBox(width: 16),
-              AppLogo(),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Text(
-                "Tap for detailed analytics",
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
-              ),
-              const Spacer(),
-              Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
-            ],
-          ),
-        ],
+        children: mainContent,
       ),
     );
   }

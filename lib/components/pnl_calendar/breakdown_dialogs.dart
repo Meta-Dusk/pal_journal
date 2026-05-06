@@ -175,7 +175,7 @@ class _BreakdownDialogFormState extends State<BreakdownDialogForm> {
           tag,
           style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
         ),
-        backgroundColor: Colors.white10,
+        backgroundColor: colors.surfaceContainer,
         side: .none,
         shape: RoundedRectangleBorder(borderRadius: .circular(8)),
         onPressed: () {
@@ -303,7 +303,7 @@ class _TagEditorDialogState extends State<TagEditorDialog> {
     ];
 
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: colors.surfaceContainer,
       title: const Text("Edit Tags"),
       content: SizedBox(
         width: double.maxFinite,
