@@ -35,27 +35,26 @@ class _EditSheetState extends State<EditSheet> {
   void initState() {
     super.initState();
     _amountController = TextEditingController(
-      text: widget.entry != null && widget.entry!.amount != 0.0
-          ? _getCurrency(widget.entry!.amount)
-          : '',
+      text: _isEntryNotEmpty() ? _getCurrency(widget.entry!.amount) : '',
     );
     _noteController = TextEditingController(text: widget.entry?.note ?? '');
     _currentBreakdown =
-        widget.entry?.breakdown
-            ?.map(
-              (e) => ExpenseItem()
-                ..category = e.category
-                ..amount = CurrencyService.toDisplay(e.amount ?? 0.0),
-            )
-            .toList() ??
-        [];
+        widget.entry?.breakdown?.map((e) => _getExpenseItem(e)).toList() ?? [];
 
     _amountController.addListener(_onAmountChanged);
   }
 
-  void _onAmountChanged() {
-    setState(() {}); // Triggers rebuild to update the visual tracker
+  bool _isEntryNotEmpty() =>
+      widget.entry != null && widget.entry!.amount != 0.0;
+
+  ExpenseItem _getExpenseItem(ExpenseItem item) {
+    return ExpenseItem()
+      ..category = item.category
+      ..amount = CurrencyService.toDisplay(item.amount ?? 0.0);
   }
+
+  /// Triggers rebuild to update the visual tracker.
+  void _onAmountChanged() => setState(() {});
 
   @override
   void dispose() {
@@ -65,10 +64,10 @@ class _EditSheetState extends State<EditSheet> {
     super.dispose();
   }
 
+  /// --- SMART AUTO-SYNC ---\
+  /// If they have breakdowns, the breakdown sum is the ultimate source of truth.
+  /// If they forgot to tap the sync button, we do it for them!
   void _saveData() async {
-    // --- SMART AUTO-SYNC ---
-    // If they have breakdowns, the breakdown sum is the ultimate source of truth.
-    // If they forgot to tap the sync button, we do it for them!
     double finalDisplayAmount = _currentTotal;
     if (_currentBreakdown.isNotEmpty && _difference != 0) {
       finalDisplayAmount = _allocatedAmount;
@@ -151,36 +150,15 @@ class _EditSheetState extends State<EditSheet> {
               ),
             ),
 
-            // Only show the tracker/sync button if there are actually breakdowns
+            // Only show the tracker/sync button if there are breakdowns
             if (_currentBreakdown.isNotEmpty)
-              GestureDetector(
-                onTap: () {
-                  // Instantly updates the main total to match the breakdown!
-                  setState(() {
-                    _amountController.text = _getCurrency(_allocatedAmount);
-                  });
-                },
-                child: Row(
-                  children: [
-                    if (_difference != 0)
-                      Icon(Icons.sync, size: 12, color: trackerColor),
-                    if (_difference != 0) const SizedBox(width: 4),
-                    Text(
-                      trackerText,
-                      style: TextStyle(
-                        color: trackerColor,
-                        fontSize: 12,
-                        fontWeight: .bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _getSyncGestureDetector(trackerColor, trackerText),
           ],
         ),
         TextButton.icon(
           onPressed: () async {
-            // We pass the exact algebraic difference into the dialog to auto-fill it!
+            // We pass the exact algebraic difference into the dialog
+            // to auto-fill it!
             final newItem = await showAddBreakdownDialog(context, _difference);
             if (newItem != null) {
               setState(() => _currentBreakdown.add(newItem));
@@ -214,15 +192,37 @@ class _EditSheetState extends State<EditSheet> {
           const SizedBox(height: 16),
           breakDownHeaderRow,
           const SizedBox(height: 8),
-          ...getDismissibles(_currentBreakdown, colors),
+          ..._getDismissibles(_currentBreakdown, colors),
           const SizedBox(height: 24),
-          getEntryControls(colors),
+          _getEntryControls(colors),
         ],
       ),
     );
   }
 
-  Row getEntryControls(ColorScheme colors) {
+  GestureDetector _getSyncGestureDetector(
+    Color trackerColor,
+    String trackerText,
+  ) {
+    final mainContent = [
+      if (_difference != 0) Icon(Icons.sync, size: 12, color: trackerColor),
+      if (_difference != 0) const SizedBox(width: 4),
+      Text(
+        trackerText,
+        style: TextStyle(color: trackerColor, fontSize: 12, fontWeight: .bold),
+      ),
+    ];
+
+    return GestureDetector(
+      onTap: () {
+        // Updates the main total to match the breakdown
+        setState(() => _amountController.text = _getCurrency(_allocatedAmount));
+      },
+      child: Row(children: mainContent),
+    );
+  }
+
+  Row _getEntryControls(ColorScheme colors) {
     // The form is always valid now, because our Save method safely auto-syncs!
     final bool isFormValid =
         _amountController.text.isNotEmpty || _currentBreakdown.isNotEmpty;
@@ -272,7 +272,7 @@ class _EditSheetState extends State<EditSheet> {
     );
   }
 
-  Iterable<Dismissible> getDismissibles(
+  Iterable<Dismissible> _getDismissibles(
     List<ExpenseItem> breakdownList,
     ColorScheme colors,
   ) {
@@ -284,6 +284,7 @@ class _EditSheetState extends State<EditSheet> {
 
       return Dismissible(
         key: UniqueKey(),
+
         background: Container(
           alignment: .centerLeft,
           padding: const .only(left: 20),
@@ -294,6 +295,7 @@ class _EditSheetState extends State<EditSheet> {
           ),
           child: Icon(Icons.edit, color: colors.onSecondary),
         ),
+
         secondaryBackground: Container(
           alignment: .centerRight,
           padding: const .only(right: 20),
@@ -304,26 +306,11 @@ class _EditSheetState extends State<EditSheet> {
           ),
           child: Icon(Icons.delete, color: colors.onError),
         ),
-        confirmDismiss: (direction) async {
-          if (direction == .endToStart) {
-            setState(() => _currentBreakdown.removeAt(index));
-            return true;
-          } else if (direction == .startToEnd) {
-            // When editing, the allowance is the current
-            // difference PLUS the item's own value
-            final editAllowance = _difference + (item.amount ?? 0.0);
-            final editedItem = await showEditBreakdownDialog(
-              context,
-              item,
-              editAllowance,
-            );
-            if (editedItem != null) {
-              setState(() => _currentBreakdown[index] = editedItem);
-            }
-            return false;
-          }
-          return false;
-        },
+
+        confirmDismiss: (direction) async =>
+            _onConfirmDismiss(direction, index, item),
+        onDismissed: (direction) => _onDelete(direction, index),
+
         child: Container(
           margin: const .only(bottom: 8),
           padding: const .all(16),
@@ -344,6 +331,77 @@ class _EditSheetState extends State<EditSheet> {
         ),
       );
     });
+  }
+
+  void _onDelete(DismissDirection direction, int index) {
+    if (direction != .endToStart) return;
+    setState(() => _currentBreakdown.removeAt(index));
+  }
+
+  Future<bool?> _onConfirmDismiss(
+    DismissDirection direction,
+    int index,
+    ExpenseItem item,
+  ) async {
+    switch (direction) {
+      case .endToStart:
+        return await showDialog<bool>(
+          context: context,
+          builder: (_) => ConfirmationDialog(
+            currentBreakdown: _currentBreakdown,
+            index: index,
+          ),
+        );
+
+      case .startToEnd:
+        // When editing, the allowance is the current
+        // difference PLUS the item's own value
+        final editAllowance = _difference + (item.amount ?? 0.0);
+        final editedItem = await showEditBreakdownDialog(
+          context,
+          item,
+          editAllowance,
+        );
+        if (editedItem != null) {
+          setState(() => _currentBreakdown[index] = editedItem);
+        }
+        return false;
+
+      default:
+        return false;
+    }
+  }
+}
+
+class ConfirmationDialog extends StatelessWidget {
+  const ConfirmationDialog({
+    super.key,
+    required this.currentBreakdown,
+    required this.index,
+  });
+
+  final List<ExpenseItem> currentBreakdown;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text("Delete Breakdown Entry?"),
+      content: Text(
+        "Are you sure you want to delete "
+        "'${currentBreakdown[index].category}'?",
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text("Cancel"),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text("Delete Permanently"),
+        ),
+      ],
+    );
   }
 }
 

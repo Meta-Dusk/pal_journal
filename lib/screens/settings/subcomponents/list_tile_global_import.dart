@@ -58,7 +58,7 @@ void _globalImportCsv(BuildContext context) async {
 
   if (confirm != true || !context.mounted) return;
 
-  final success = await CsvService.importAll();
+  final success = await CsvService.importAllPnl();
 
   if (!context.mounted) return;
 

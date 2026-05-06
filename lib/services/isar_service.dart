@@ -1,8 +1,9 @@
 import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
+import 'sync_service.dart';
 
 class IsarService {
   static final IsarService _instance = IsarService._internal();
@@ -24,6 +25,26 @@ class IsarService {
       ], directory: dir.path);
     }
     return Future.value(Isar.getInstance());
+  }
+
+  Future<void> performFullRestore(CloudDataMap cloudData) async {
+    final isar = await db;
+
+    await isar.writeTxn(() async {
+      // Clear all existing local data first to ensure a clean mirror
+      await isar.pnLEntrys.clear();
+      await isar.quantifiedGoals.clear();
+      await isar.monthlyGoals.clear();
+
+      // Save restored data
+      await isar.pnLEntrys.putAll(cloudData[CloudData.pnl] as List<PnLEntry>);
+      await isar.quantifiedGoals.putAll(
+        cloudData[CloudData.quantified] as List<QuantifiedGoal>,
+      );
+      await isar.monthlyGoals.putAll(
+        cloudData[CloudData.monthly] as List<MonthlyGoal>,
+      );
+    });
   }
 
   // --- PNL ENTRIES ---

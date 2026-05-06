@@ -2,8 +2,8 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:pal_journal/services/auth_service.dart';
-import 'cloud_sync_card.dart';
 import 'subcomponents/settings_list_tiles.dart';
+import 'cloud_sync_card.dart';
 import 'smart_auth_menu.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -50,17 +50,7 @@ class SettingsScreen extends StatelessWidget {
           border: .all(color: colors.onSurface.withValues(alpha: 0.3)),
           borderRadius: .circular(16),
         ),
-        child: Column(
-          children: [
-            const ListTileGlobalExport(),
-            Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
-            const ListTileGlobalImport(),
-            Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
-            const ListTileGoalsExport(),
-            Divider(color: colors.onSurface.withValues(alpha: 0.2), height: 1),
-            const ListTilesGoalsImport(),
-          ],
-        ),
+        child: const ListTileCSV(),
       ),
     ];
 
@@ -158,13 +148,14 @@ class AuthView extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return ListenableBuilder(
       listenable: AuthService.currentUserNotifier,
-      builder: (context, _) {
+      builder: (_, _) {
         final user = AuthService.currentUserNotifier.value;
+        final isWindows = Platform.isWindows;
 
         if (user == null) {
           final loggedOutContent = [
             const SmartAuthMenu(),
-            if (!Platform.isWindows) const CloudSyncCard(),
+            if (!isWindows) const CloudSyncCard(),
           ];
           return Column(children: loggedOutContent);
         }
@@ -174,10 +165,7 @@ class AuthView extends StatelessWidget {
           const CloudSyncCard(),
         ];
         return Column(
-          children: [
-            const SmartAuthMenu(),
-            if (!Platform.isWindows) ...loggedInContent,
-          ],
+          children: [const SmartAuthMenu(), if (!isWindows) ...loggedInContent],
         );
       },
     );

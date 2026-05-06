@@ -26,4 +26,31 @@ class QuantifiedGoal {
 
   @enumerated
   late GoalValueType valueType;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'targetValue': targetValue,
+      'currentValue': currentValue,
+      'unit': unit,
+      'deadline': deadline.toIso8601String(), // Store as String for consistency
+      'isPinned': isPinned,
+      'isCompleted': isCompleted,
+      'valueType': valueType.index, // Store the enum index
+    };
+  }
+
+  static QuantifiedGoal fromMap(Map<String, dynamic> map) {
+    return QuantifiedGoal()
+      ..id = map['id'] ?? 0
+      ..title = map['title'] ?? ''
+      ..targetValue = (map['targetValue'] as num).toDouble()
+      ..currentValue = (map['currentValue'] as num).toDouble()
+      ..unit = map['unit'] ?? ''
+      ..deadline = DateTime.parse(map['deadline'])
+      ..isPinned = map['isPinned'] ?? false
+      ..isCompleted = map['isCompleted'] ?? false
+      ..valueType = GoalValueType.values[map['valueType'] ?? 0];
+  }
 }
