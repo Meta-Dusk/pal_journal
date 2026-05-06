@@ -2,33 +2,27 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
-import 'package:pal_journal/components/csv_tool_card.dart';
 
+import 'package:pal_journal/components/csv_tool_card.dart';
+import 'package:pal_journal/core/data_types.dart';
 import 'package:pal_journal/main.dart';
 import 'package:pal_journal/models/monthly_goal.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/services/isar_service.dart';
-import './csv_parsing.dart';
-
-typedef Dynamic2DList = List<List<dynamic>>;
+import 'row_builders.dart';
+import 'csv_parsing.dart';
 
 class CsvService {
   static final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
+  static final String _fileNamePrefix = 'PAL_Journal_';
 
   /// Exports the currently viewed month to a CSV using a Native Save As Dialog
-  static Future<void> exportMonth(DateTime targetDate) async {
+  static Future<void> exportMonth(DateTime date) async {
     final isar = await isarService.db;
 
-    final startOfMonth = DateTime(targetDate.year, targetDate.month, 1);
-    final endOfMonth = DateTime(
-      targetDate.year,
-      targetDate.month + 1,
-      0,
-      23,
-      59,
-      59,
-    );
+    final startOfMonth = DateTime(date.year, date.month, 1);
+    final endOfMonth = DateTime(date.year, date.month + 1, 0, 23, 59, 59);
 
     final entries = await isar
         .collection<PnLEntry>()
@@ -37,43 +31,9 @@ class CsvService {
         .sortByDate()
         .findAll();
 
-    List<List<dynamic>> rows = [
-      ['Date', 'Daily Total', 'Note', 'Breakdown Category', 'Breakdown Amount'],
-    ];
-
-    for (PnLEntry entry in entries) {
-      final dateStr = _dateFormat.format(entry.date);
-
-      if (entry.breakdown == null || entry.breakdown!.isEmpty) {
-        rows.add([dateStr, entry.amount, entry.note ?? '', '', '']);
-      } else {
-        for (ExpenseItem item in entry.breakdown!) {
-          rows.add([
-            dateStr,
-            entry.amount,
-            entry.note ?? '',
-            item.category ?? '',
-            item.amount ?? 0.0,
-          ]);
-        }
-      }
-    }
-
-    final String csvData = CsvParsing.listToCsv(rows);
-    final String monthName = DateFormat('MMM_yyyy').format(targetDate);
-
-    String? outputFile = await FilePicker.saveFile(
-      dialogTitle: 'Save CSV Data',
-      fileName: 'PAL_Journal_$monthName.csv',
-      type: .custom,
-      allowedExtensions: ['csv'],
-    );
-
-    // If the user didn't cancel the dialog, save the file!
-    if (outputFile != null) {
-      final file = File(outputFile);
-      await file.writeAsString(csvData);
-    }
+    final rows = RowBuilders.pnLRows(entries);
+    final String monthName = DateFormat('MMM_yyyy').format(date);
+    _saveCsv(rows, "$_fileNamePrefix$monthName");
   }
 
   static Future<void> exportMonthCategory(
@@ -92,9 +52,10 @@ class CsvService {
             .filter()
             .dateBetween(start, end)
             .findAll();
+        final month = date.month.toString().padLeft(2, '0');
         await _saveCsv(
-          _buildPnLRows(entries),
-          'PAL_PnL_${date.month}_${date.year}',
+          RowBuilders.pnLRows(entries),
+          '${_fileNamePrefix}PnL_${month}_${date.year}',
         );
         break;
 
@@ -105,9 +66,10 @@ class CsvService {
             .filter()
             .deadlineBetween(start, end)
             .findAll();
+        final month = date.month.toString().padLeft(2, '0');
         await _saveCsv(
-          _buildTargetGoalRows(goals),
-          'PAL_Goals_${date.month}_${date.year}',
+          RowBuilders.targetGoalRows(goals),
+          '${_fileNamePrefix}Target_Goals_${month}_${date.year}',
         );
         break;
 
@@ -118,12 +80,12 @@ class CsvService {
             .filter()
             .monthEqualTo(start)
             .findFirst();
-        if (target != null) {
-          await _saveCsv(
-            _buildMonthlyGoalRows([target]),
-            'PAL_Target_${date.month}_${date.year}',
-          );
-        }
+        if (target == null) break;
+        final month = date.month.toString().padLeft(2, '0');
+        await _saveCsv(
+          RowBuilders.monthlyGoalRows([target]),
+          '${_fileNamePrefix}Monthly_Goals_${month}_${date.year}',
+        );
         break;
     }
   }
@@ -181,7 +143,8 @@ class CsvService {
               ..category = category
               ..amount = breakdownAmount;
 
-            final currentList = importedEntries[dateKey]!.breakdown!.toList();
+            final currentList =
+                importedEntries[dateKey]!.breakdown?.toList() ?? [];
             currentList.add(item);
             importedEntries[dateKey]!.breakdown = currentList;
           }
@@ -215,34 +178,12 @@ class CsvService {
   /// Exports the ENTIRE database to a CSV using a Native Save As Dialog
   static Future<void> exportAllPnl() async {
     final entries = await IsarService().getAllEntries();
-
-    Dynamic2DList rows = [
-      ['Date', 'Daily Total', 'Note', 'Breakdown Category', 'Breakdown Amount'],
-    ];
-
-    for (PnLEntry entry in entries) {
-      final dateStr = _dateFormat.format(entry.date);
-
-      if (entry.breakdown == null || entry.breakdown!.isEmpty) {
-        rows.add([dateStr, entry.amount, entry.note ?? '', '', '']);
-      } else {
-        for (ExpenseItem item in entry.breakdown!) {
-          rows.add([
-            dateStr,
-            entry.amount,
-            entry.note ?? '',
-            item.category ?? '',
-            item.amount ?? 0.0,
-          ]);
-        }
-      }
-    }
-
+    final rows = RowBuilders.pnLRows(entries);
     final String csvData = CsvParsing.listToCsv(rows);
 
     String? outputFile = await FilePicker.saveFile(
       dialogTitle: 'Save All Data Backup',
-      fileName: 'PAL_Journal_Complete_Backup.csv',
+      fileName: '${_fileNamePrefix}Complete_PnL_Backup.csv',
       type: .custom,
       allowedExtensions: ['csv'],
     );
@@ -278,7 +219,6 @@ class CsvService {
         try {
           final parsedDate = _dateFormat.parse(row[0].toString());
 
-          // NO MONTH RESTRICTION HERE! We accept all dates.
           final dateKey = DateTime(
             parsedDate.year,
             parsedDate.month,
@@ -302,7 +242,8 @@ class CsvService {
             final item = ExpenseItem()
               ..category = category
               ..amount = breakdownAmount;
-            final currentList = importedEntries[dateKey]!.breakdown!.toList();
+            final currentList =
+                importedEntries[dateKey]!.breakdown?.toList() ?? [];
             currentList.add(item);
             importedEntries[dateKey]!.breakdown = currentList;
           }
@@ -331,50 +272,11 @@ class CsvService {
     }
   }
 
-  static Future<String> exportGoalsToCSV(List<MonthlyGoal> goals) async {
-    String csv = "Month,Type,Amount,Offset\n";
-    for (var goal in goals) {
-      csv +=
-          "${goal.month.year}-"
-          "${goal.month.month},"
-          "${goal.type.name},"
-          "${goal.amount},"
-          "${goal.syncedOffset}\n";
-    }
-    return csv;
-  }
-
   // --- QUANTIFIED GOALS ---
   static Future<void> exportAllTargetGoals() async {
     final quantifiedGoals = await IsarService().getAllQuantifiedGoals();
-
-    List<List<dynamic>> rows = [
-      [
-        'Title',
-        'Target',
-        'Current',
-        'Unit',
-        'Deadline',
-        'Pinned',
-        'Completed',
-        'Type',
-      ],
-    ];
-
-    for (QuantifiedGoal goal in quantifiedGoals) {
-      rows.add([
-        goal.title,
-        goal.targetValue,
-        goal.currentValue,
-        goal.unit,
-        _dateFormat.format(goal.deadline),
-        goal.isPinned ? 1 : 0,
-        goal.isCompleted ? 1 : 0,
-        goal.valueType.index,
-      ]);
-    }
-
-    await _saveCsv(rows, 'PAL_Goals_Backup');
+    final rows = RowBuilders.targetGoalRows(quantifiedGoals);
+    await _saveCsv(rows, '${_fileNamePrefix}Complete_Target_Goals_Backup');
   }
 
   static Future<bool> importAllTargetGoals() async {
@@ -392,9 +294,12 @@ class CsvService {
           ..unit = row[3].toString()
           ..deadline = _dateFormat.parse(row[4].toString())
           ..isPinned = row[5].toString() == "1"
-          ..isCompleted = row[6].toString() == "1"
-          ..valueType =
+          ..isCompleted = row[6].toString() == "1";
+
+        if (row.length >= 8) {
+          goal.valueType =
               GoalValueType.values[int.tryParse(row[7].toString()) ?? 0];
+        }
 
         await isar.collection<QuantifiedGoal>().put(goal);
       }
@@ -405,20 +310,8 @@ class CsvService {
   // --- MONTHLY GOALS ---
   static Future<void> exportAllMonthlyGoals() async {
     final monthlyGoals = await IsarService().getAllGoals();
-
-    List<List<dynamic>> rows = [
-      ['Month', 'Type', 'Amount', 'Offset'],
-    ];
-
-    for (MonthlyGoal goal in monthlyGoals) {
-      rows.add([
-        _dateFormat.format(goal.month),
-        goal.type.index,
-        goal.amount,
-        goal.syncedOffset,
-      ]);
-    }
-    await _saveCsv(rows, 'PAL_Monthly_Targets');
+    final rows = RowBuilders.monthlyGoalRows(monthlyGoals);
+    await _saveCsv(rows, '${_fileNamePrefix}Complete_Monthly_Goals');
   }
 
   static Future<bool> importAllMonthlyGoals() async {
@@ -432,7 +325,8 @@ class CsvService {
           final row = fields[i];
           if (row.length < 3) continue;
 
-          final monthDate = _dateFormat.parse(row[0].toString());
+          final rawDate = _dateFormat.parse(row[0].toString());
+          final monthDate = DateTime.utc(rawDate.year, rawDate.month, 1);
 
           // Check if a goal already exists for this specific month
           final existing = await isar
@@ -458,10 +352,7 @@ class CsvService {
   }
 
   // --- PRIVATE HELPERS ---
-  static Future<void> _saveCsv(
-    List<List<dynamic>> rows,
-    String fileName,
-  ) async {
+  static Future<void> _saveCsv(Dynamic2DList rows, String fileName) async {
     final csvData = CsvParsing.listToCsv(rows);
     String? outputFile = await FilePicker.saveFile(
       dialogTitle: 'Save CSV Data',
@@ -474,82 +365,12 @@ class CsvService {
 
   static Future<Dynamic2DList?> _pickAndParseCsv() async {
     FilePickerResult? result = await FilePicker.pickFiles(
+      dialogTitle: 'Load CSV Data',
       type: .custom,
       allowedExtensions: ['csv'],
     );
     if (result == null || result.files.single.path == null) return null;
     final csvString = await File(result.files.single.path!).readAsString();
     return CsvParsing.parseCsv(csvString);
-  }
-
-  // --- ROW BUILDERS ---
-
-  static Dynamic2DList _buildPnLRows(List<PnLEntry> entries) {
-    Dynamic2DList rows = [
-      ['Date', 'Daily Total', 'Note', 'Breakdown Category', 'Breakdown Amount'],
-    ];
-
-    for (var entry in entries) {
-      final dateStr = _dateFormat.format(entry.date);
-      if (entry.breakdown == null || entry.breakdown!.isEmpty) {
-        rows.add([dateStr, entry.amount, entry.note ?? '', '', '']);
-      } else {
-        for (var item in entry.breakdown!) {
-          rows.add([
-            dateStr,
-            entry.amount,
-            entry.note ?? '',
-            item.category ?? '',
-            item.amount ?? 0.0,
-          ]);
-        }
-      }
-    }
-    return rows;
-  }
-
-  static Dynamic2DList _buildTargetGoalRows(List<QuantifiedGoal> goals) {
-    Dynamic2DList rows = [
-      [
-        'Title',
-        'Target',
-        'Current',
-        'Unit',
-        'Deadline',
-        'Pinned',
-        'Completed',
-        'Type',
-      ],
-    ];
-
-    for (var goal in goals) {
-      rows.add([
-        goal.title,
-        goal.targetValue,
-        goal.currentValue,
-        goal.unit,
-        _dateFormat.format(goal.deadline),
-        goal.isPinned ? 1 : 0,
-        goal.isCompleted ? 1 : 0,
-        goal.valueType.index, // Save enum as index for easier parsing
-      ]);
-    }
-    return rows;
-  }
-
-  static Dynamic2DList _buildMonthlyGoalRows(List<MonthlyGoal> targets) {
-    Dynamic2DList rows = [
-      ['Month', 'Type', 'Amount', 'Offset'],
-    ];
-
-    for (var target in targets) {
-      rows.add([
-        _dateFormat.format(target.month),
-        target.type.index, // Logic for Profit Target vs Budget
-        target.amount,
-        target.syncedOffset,
-      ]);
-    }
-    return rows;
   }
 }

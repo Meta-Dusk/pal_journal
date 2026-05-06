@@ -1,4 +1,4 @@
-mixin CsvParsing {
+class CsvParsing {
   /// Converts a List of Lists into a valid CSV String,
   /// handling commas inside text.
   static String listToCsv(List<List<dynamic>> rows) {
