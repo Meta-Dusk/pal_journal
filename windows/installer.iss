@@ -3,7 +3,7 @@
 
 #define MyAppName "PAL Journal"
 #ifndef MyAppVersion
-#define MyAppVersion "0.15.3"
+#define MyAppVersion "0.15.4"
 #endif
 #define MyAppPublisher "MetaDusk Inc."
 #define MyAppURL "https://github.com/Meta-Dusk/pal_journal"
