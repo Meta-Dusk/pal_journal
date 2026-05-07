@@ -7,6 +7,14 @@ The name "**PAL: Journal**" simply comes from the term used in investments or fi
 
 Below are some previews of the app in action.
 
+### Windows
+
+<img width="800" height="450" alt="windows-preview" src="https://github.com/user-attachments/assets/e3b5b4df-b3d8-4f24-b7c9-81ad4a5370e1" />
+
+### Android
+
+<img width="400" height="888" alt="android-preview" src="https://github.com/user-attachments/assets/fc7bb6cb-227b-4d4c-b5b8-f6c58b9a0c7e" />
+
 ## Supported Platforms
 
 The plan for this app, is to be able to support both mobile (**Android**) and desktop (**Windows**) platforms.
