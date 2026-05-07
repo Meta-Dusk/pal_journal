@@ -208,7 +208,7 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
         Row(children: leadingContent),
         const SizedBox(width: 12),
         Text(
-          "Synced: $_lastSyncDate",
+          _lastSyncDate,
           style: TextStyle(fontSize: 16, color: colors.onSurfaceVariant),
         ),
       ],
