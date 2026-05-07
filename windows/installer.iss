@@ -1,9 +1,9 @@
 ; Safe to share publicly — contains no private data
 ; Paths are relative to the 'installer' folder at the project root
 
-#define MyAppName "PaL Journal"
+#define MyAppName "PAL Journal"
 #ifndef MyAppVersion
-#define MyAppVersion "0.15.0"
+#define MyAppVersion "0.15.3"
 #endif
 #define MyAppPublisher "MetaDusk Inc."
 #define MyAppURL "https://github.com/Meta-Dusk/pal_journal"
@@ -28,7 +28,7 @@ ChangesAssociations=no
 DisableProgramGroupPage=yes
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=..\dist\installer
-OutputBaseFilename={#MyAppName}-v{#MyAppVersion}-Win64-Installer
+OutputBaseFilename={#MyAppName}_v{#MyAppVersion}-Win64-Installer
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
