@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pal_journal/components/goals/goal_progress_card.dart';
+import 'package:pal_journal/components/target_goal/goal_progress_card.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/screens/settings/inventory_log_view.dart';
@@ -167,11 +167,7 @@ class DetailsSheet extends StatelessWidget {
       ),
       confirmDismiss: (_) => _showDeleteConfirmation(context, goal),
       onDismissed: (_) => onEditPressed(),
-      child: GoalProgressCard(
-        goal: goal,
-        onUpdate: onRefresh,
-        showPinnedIcon: false,
-      ),
+      child: GoalProgressCard(goal: goal, onUpdate: onRefresh),
     );
   }
 

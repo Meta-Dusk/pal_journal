@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pal_journal/components/goals/goal_creation_sheet.dart';
+import 'package:pal_journal/components/target_goal/goal_creation_sheet.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/services/isar_service.dart';
 

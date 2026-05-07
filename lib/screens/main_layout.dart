@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../components/goals/goal_creation_sheet.dart';
+import '../components/target_goal/goal_creation_sheet.dart';
 import '../components/pnl_calendar/edit_sheet.dart';
 import '../components/pnl_calendar/pnl_calendar.dart';
 import '../components/pnl_calendar/pnl_main_calendar_view.dart';
