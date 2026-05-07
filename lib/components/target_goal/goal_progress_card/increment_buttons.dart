@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../goal_progress_card.dart';
-import '../subcomponents/increment_button.dart';
+import 'goal_progress_card.dart';
+import 'increment_button.dart';
 
 class IncrementButtons extends StatelessWidget {
   const IncrementButtons({

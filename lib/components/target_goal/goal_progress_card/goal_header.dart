@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/components/target_goal/goal_progress_card.dart';
+import 'package:pal_journal/components/target_goal/goal_progress_card/goal_progress_card.dart';
 import 'goal_edit_button.dart';
 import 'goal_archive_button.dart';
 import 'pin_goal_button.dart';

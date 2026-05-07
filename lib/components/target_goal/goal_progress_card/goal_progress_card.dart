@@ -2,7 +2,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/services/isar_service.dart';
-import 'subcomponents/goal_buttons.dart';
+import 'goal_buttons.dart';
 
 class GoalProgressCard extends StatefulWidget {
   final QuantifiedGoal goal;

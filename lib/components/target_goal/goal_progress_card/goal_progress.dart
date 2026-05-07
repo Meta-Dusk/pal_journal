@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/components/target_goal/goal_progress_card.dart';
+import 'package:pal_journal/components/target_goal/goal_progress_card/goal_progress_card.dart';
 
 class GoalProgress extends StatelessWidget {
   const GoalProgress({super.key, required this.gpc});

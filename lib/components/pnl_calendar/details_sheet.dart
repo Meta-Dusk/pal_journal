@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pal_journal/components/target_goal/goal_progress_card.dart';
+import '../target_goal/goal_progress_card/goal_progress_card.dart';
 import 'package:pal_journal/models/pnl_entry.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/screens/settings/inventory_log_view.dart';
@@ -155,13 +155,13 @@ class DetailsSheet extends StatelessWidget {
   ) {
     return Dismissible(
       key: Key('goal_${goal.id}'),
-      direction: .startToEnd,
+      direction: .endToStart,
       background: Container(
-        alignment: .centerLeft,
-        padding: const .only(left: 20),
+        alignment: .centerRight,
+        padding: const .only(right: 20),
         decoration: BoxDecoration(
           color: colors.error,
-          borderRadius: .circular(16),
+          borderRadius: .horizontal(right: .circular(16)),
         ),
         child: Icon(Icons.delete_outline, color: colors.onError),
       ),
