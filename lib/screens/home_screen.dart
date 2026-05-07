@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pal_journal/components/app_logo.dart';
-import 'package:pal_journal/components/goals/goal_progress_card.dart';
+import 'package:pal_journal/components/target_goal/goal_progress_card/goal_progress_card.dart';
 import 'package:pal_journal/components/pnl_filter_card.dart';
 import 'package:pal_journal/main.dart';
 import 'package:pal_journal/models/quantified_goal.dart';

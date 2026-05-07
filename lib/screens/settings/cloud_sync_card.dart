@@ -13,7 +13,18 @@ class CloudSyncCard extends StatefulWidget {
 
 class _CloudSyncCardState extends State<CloudSyncCard> {
   bool _isLoading = false;
-  String _lastSyncDate = "Never";
+  String _lastSyncDate = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialSyncDate();
+  }
+
+  Future<void> _loadInitialSyncDate() async {
+    final date = await SyncService.getLastSyncDisplay();
+    if (mounted) setState(() => _lastSyncDate = date);
+  }
 
   /// Make sure to cancel all FireBase operations on Windows.
   bool _windowsWarningCheck() {
@@ -55,11 +66,12 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
       // Push to Firestore
       final error = await SyncService.backupAllDataToCloud();
       await SyncService.updateLastSyncTimestamp();
-      _lastSyncDate = await SyncService.getLastSyncDisplay();
+      final newDate = await SyncService.getLastSyncDisplay();
 
       if (!mounted) return;
 
       if (error == null) {
+        setState(() => _lastSyncDate = newDate);
         _showMessage(
           "Successfully backed up $totalItems entries to the cloud!",
           isError: false,
@@ -196,7 +208,7 @@ class _CloudSyncCardState extends State<CloudSyncCard> {
         Row(children: leadingContent),
         const SizedBox(width: 12),
         Text(
-          "Last Synced: $_lastSyncDate",
+          "Synced: $_lastSyncDate",
           style: TextStyle(fontSize: 16, color: colors.onSurfaceVariant),
         ),
       ],

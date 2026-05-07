@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-import 'package:pal_journal/models/monthly_goal.dart';
-import 'package:pal_journal/services/currency/currency_service.dart';
+import 'package:pal_journal/models/data_models.dart';
 import 'package:pal_journal/services/isar_service.dart';
-import 'package:pal_journal/utils/formatters.dart';
-import 'package:pal_journal/models/pnl_entry.dart';
 import './subcomponents/calendar_components.dart';
 
 class PnLCalendar extends StatefulWidget {
@@ -37,41 +33,12 @@ class PnLCalendarState extends State<PnLCalendar> {
     if (mounted) setState(() {});
   }
 
-  // --- THE NEW SPLIT MATH ENGINE ---
-
-  double get _monthlyExpenses {
-    return _dailyEntries.values
-        .where(_checkFocusedDateLoss)
-        .fold(0.0, (sum, e) => sum + e.amount.abs());
-  }
-
-  bool _checkFocusedDateLoss(PnLEntry entry) {
-    return entry.date.year == _focusedDay.year &&
-        entry.date.month == _focusedDay.month &&
-        entry.amount < 0;
-  }
-
-  double get _monthlyIncome {
-    return _dailyEntries.values
-        .where(_checkFocusedDateProfit)
-        .fold(0.0, (sum, e) => sum + e.amount);
-  }
-
-  bool _checkFocusedDateProfit(PnLEntry entry) {
-    return entry.date.year == _focusedDay.year &&
-        entry.date.month == _focusedDay.month &&
-        entry.amount > 0;
-  }
-
-  DateTime _normalizeDate(DateTime date) =>
+  static DateTime _normalizeDate(DateTime date) =>
       DateTime.utc(date.year, date.month, date.day);
 
-  /// Profit naturally goes up and down via algebraic Net PnL!
-  /// Returns the true algebraic Net PnL.
-  double get _netProfit => _monthlyIncome - _monthlyExpenses;
-
-  Future<void> _loadMonthGoal(DateTime month) async {
-    final goal = await IsarService().getGoal(month);
+  Future<void> _loadMonthGoal(DateTime date) async {
+    final normalizedMonth = DateTime(date.year, date.month, 1);
+    final goal = await IsarService().getGoal(normalizedMonth);
     setState(() => _currentMonthGoal = goal);
   }
 
@@ -83,8 +50,7 @@ class PnLCalendarState extends State<PnLCalendar> {
       loadedData[normalizedDate] = entry;
     }
 
-    if (!mounted) return;
-    setState(() => _dailyEntries = loadedData);
+    if (mounted) setState(() => _dailyEntries = loadedData);
   }
 
   Future<void> _loadAllData() async {
@@ -97,8 +63,7 @@ class PnLCalendarState extends State<PnLCalendar> {
       loadedGoals.putIfAbsent(normalizedDate, () => []).add(goal);
     }
 
-    if (!mounted) return;
-    setState(() => _goalDeadlines = loadedGoals);
+    if (mounted) setState(() => _goalDeadlines = loadedGoals);
   }
 
   PnLEntry? _getEntryForDay(DateTime day) => _dailyEntries[_normalizeDate(day)];
@@ -169,6 +134,10 @@ class PnLCalendarState extends State<PnLCalendar> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final stats = PnLStatsEngine(
+      entries: _dailyEntries,
+      focusedDay: _focusedDay,
+    );
 
     final tableCalendar = TableCalendar(
       pageJumpingEnabled: true,
@@ -225,10 +194,26 @@ class PnLCalendarState extends State<PnLCalendar> {
         ),
         if (_currentMonthGoal != null) ...[
           const SizedBox(height: 16),
-          buildMonthlyGoalIndicator(colors),
+          MonthlyGoalIndicator(
+            goal: _currentMonthGoal!,
+            income: stats.monthlyIncome,
+            expenses: stats.monthlyExpenses,
+            netProfit: stats.netProfit,
+            onSync: () => _handleSmartSync(stats),
+          ),
         ],
       ],
     );
+  }
+
+  void _handleSmartSync(PnLStatsEngine stats) async {
+    final totalIncome = stats.monthlyIncome;
+    final newGoal = _currentMonthGoal!
+      ..month = DateTime.utc(_focusedDay.year, _focusedDay.month, 1)
+      ..syncedOffset = totalIncome;
+
+    await IsarService().saveGoal(newGoal);
+    await _loadMonthGoal(_focusedDay);
   }
 
   CalendarBuilders<dynamic> _calendarBuilders(ColorScheme colors) {
@@ -292,153 +277,4 @@ class PnLCalendarState extends State<PnLCalendar> {
 
   bool _checkHasGoal(DateTime day) =>
       _goalDeadlines[_normalizeDate(day)]?.isNotEmpty ?? false;
-
-  Widget buildMonthlyGoalIndicator(ColorScheme colors) {
-    if (_currentMonthGoal == null) return const SizedBox.shrink();
-
-    final isBudget = _currentMonthGoal!.type == .budget;
-
-    double target;
-    double progress;
-    bool isOverBudget = false;
-    bool isGoalMet = false;
-    Color barColor;
-    String label;
-    String valueText;
-
-    // The "Unsynced Income" is the total income
-    // minus what has already been added to the budget
-    final unsyncedIncome = _monthlyIncome - _currentMonthGoal!.syncedOffset;
-    final symbol = CurrencyService.symbol;
-
-    if (isBudget) {
-      label = "Monthly Budget";
-      // The target is visually increased by the synced offset!
-      target = _currentMonthGoal!.amount + _currentMonthGoal!.syncedOffset;
-      final currentValue = _monthlyExpenses;
-
-      progress = target > 0 ? (currentValue / target).clamp(0.0, 1.0) : 0.0;
-      isOverBudget = currentValue > target;
-      barColor = isOverBudget ? colors.error : colors.primary;
-      valueText =
-          "$symbol${_getCurrency(currentValue)} "
-          "/ $symbol${_getCurrency(target)}";
-    } else {
-      label = "Profit Target";
-      target = _currentMonthGoal!.amount;
-      final currentValue = _netProfit;
-
-      progress = target > 0 ? (currentValue / target).clamp(0.0, 1.0) : 0.0;
-      if (currentValue < 0) progress = 0.0;
-      isGoalMet = currentValue >= target;
-      barColor = isGoalMet ? colors.primary : colors.error;
-      valueText =
-          "$symbol${_getCurrency(currentValue)} "
-          "/ $symbol${_getCurrency(target)}";
-    }
-
-    final mainContent = [
-      Row(
-        mainAxisAlignment: .spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isBudget ? Icons.money_off : Icons.trending_up,
-                color: barColor,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(label, style: TextStyle(color: colors.onSurfaceVariant)),
-            ],
-          ),
-          Text(
-            valueText,
-            style: TextStyle(color: barColor, fontWeight: .bold, fontSize: 14),
-          ),
-        ],
-      ),
-      const SizedBox(height: 12),
-      ClipRRect(
-        borderRadius: .circular(8),
-        child: LinearProgressIndicator(
-          value: progress,
-          minHeight: 8,
-          backgroundColor: colors.surfaceContainerHighest,
-          valueColor: AlwaysStoppedAnimation<Color>(barColor),
-        ),
-      ),
-
-      // --- DYNAMIC NOTIFICATIONS & SYNC BUTTON ---
-      if (isOverBudget) ...[
-        const SizedBox(height: 8),
-        Text(
-          "You have exceeded your monthly budget!",
-          style: TextStyle(color: colors.error, fontSize: 12),
-        ),
-      ] else if (isGoalMet && !isBudget) ...[
-        const SizedBox(height: 8),
-        Text(
-          "You hit your profit target! Awesome!",
-          style: TextStyle(color: colors.primary, fontSize: 12),
-        ),
-      ] else if (isBudget && unsyncedIncome > 0) ...[
-        // The Smart Sync Button!
-        const SizedBox(height: 12),
-        GestureDetector(
-          onTap: () async {
-            // Re-save the goal with the new offset
-            // (which perfectly equals total income)
-            final newGoal = MonthlyGoal()
-              ..month = _focusedDay
-              ..amount = _currentMonthGoal!.amount
-              ..type = .budget
-              ..syncedOffset = _monthlyIncome;
-            await IsarService().saveGoal(newGoal);
-            _loadMonthGoal(_focusedDay); // Refresh the UI instantly
-          },
-          child: Container(
-            padding: const .symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.1),
-              borderRadius: .circular(8),
-              border: .all(color: colors.primary.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              mainAxisSize: .min,
-              children: [
-                Icon(Icons.auto_awesome, color: colors.primary, size: 14),
-                const SizedBox(width: 6),
-                Text(
-                  "Earned +$symbol${_getCurrency(unsyncedIncome)}! "
-                  "Tap to add to budget.",
-                  style: TextStyle(
-                    color: colors.primary,
-                    fontSize: 12,
-                    fontWeight: .bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ];
-
-    return Padding(
-      padding: const .symmetric(horizontal: 16.0),
-      child: Container(
-        padding: const .all(16),
-        decoration: BoxDecoration(
-          color: colors.surfaceContainer,
-          borderRadius: .circular(16),
-          border: .all(color: barColor.withValues(alpha: 0.3)),
-        ),
-        child: Column(crossAxisAlignment: .start, children: mainContent),
-      ),
-    );
-  }
-
-  String _getCurrency(double value) =>
-      AppFormatters.toCurrency(CurrencyService.toDisplay(value));
 }

@@ -44,7 +44,7 @@ class CustomDayCell extends StatelessWidget {
         ? colors.onSurfaceVariant
         : (isPositive ? colors.primary : colors.error);
 
-    final mainContent = [
+    final pnlValueContents = [
       Flexible(
         child: FittedBox(
           fit: .scaleDown,
@@ -60,7 +60,7 @@ class CustomDayCell extends StatelessWidget {
       ],
     ];
 
-    final subContent = [
+    final mainContent = [
       Text(
         '${day.day}',
         style: TextStyle(
@@ -75,7 +75,7 @@ class CustomDayCell extends StatelessWidget {
         child: Row(
           mainAxisAlignment: .center,
           mainAxisSize: .min,
-          children: mainContent,
+          children: pnlValueContents,
         ),
       ),
     ];
@@ -92,7 +92,7 @@ class CustomDayCell extends StatelessWidget {
       child: Stack(
         alignment: .center,
         children: [
-          Column(mainAxisAlignment: .center, children: subContent),
+          Column(mainAxisAlignment: .center, children: mainContent),
           if (hasGoal) Positioned(top: 24, child: GoalIndicator()),
         ],
       ),

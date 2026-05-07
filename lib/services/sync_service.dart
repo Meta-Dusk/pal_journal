@@ -127,7 +127,7 @@ class SyncService {
   static Future<String> getLastSyncDisplay() async {
     final prefs = await SharedPreferences.getInstance();
     final timestamp = prefs.getString(_syncKey);
-    if (timestamp == null) return "Never";
+    if (timestamp == null) return "";
 
     final date = DateTime.parse(timestamp);
     return DateFormat('MMM d, h:mm a').format(date); // e.g., May 6, 10:38 PM

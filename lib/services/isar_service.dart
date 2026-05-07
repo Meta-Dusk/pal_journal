@@ -167,7 +167,8 @@ class IsarService {
   Future<void> saveGoal(MonthlyGoal goal) async {
     final isar = await db;
     // Ensure the date is always the 1st of the month at UTC for consistency
-    goal.month = DateTime.utc(goal.month.year, goal.month.month, 1);
+    final rawDate = goal.month;
+    goal.month = DateTime.utc(rawDate.year, rawDate.month, 1);
 
     await isar.writeTxn(() async {
       await isar.collection<MonthlyGoal>().put(goal);
@@ -175,9 +176,9 @@ class IsarService {
   }
 
   /// Retrieves the goal for a specific month.
-  Future<MonthlyGoal?> getGoal(DateTime month) async {
+  Future<MonthlyGoal?> getGoal(DateTime date) async {
     final isar = await db;
-    final normalized = DateTime.utc(month.year, month.month, 1);
+    final normalized = DateTime.utc(date.year, date.month, 1);
     return await isar
         .collection<MonthlyGoal>()
         .filter()

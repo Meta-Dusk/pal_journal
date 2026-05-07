@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:pal_journal/models/quantified_goal.dart';
 import 'package:pal_journal/services/isar_service.dart';
+import 'goal_value_type_button.dart';
+import 'list_tile_change_deadline.dart';
+import 'creation_text_fields.dart';
 
 class GoalCreationSheet extends StatefulWidget {
   const GoalCreationSheet({super.key, this.existingGoal});
@@ -23,14 +25,13 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.existingGoal != null) {
-      _titleController.text = widget.existingGoal!.title;
-      _targetController.text = widget.existingGoal!.targetValue.toString();
-      _unitController.text = widget.existingGoal!.unit;
-      _selectedDate = widget.existingGoal!.deadline;
-      _isPinned = widget.existingGoal!.isPinned;
-      _valueType = widget.existingGoal!.valueType;
-    }
+    if (widget.existingGoal == null) return;
+    _titleController.text = widget.existingGoal!.title;
+    _targetController.text = widget.existingGoal!.targetValue.toString();
+    _unitController.text = widget.existingGoal!.unit;
+    _selectedDate = widget.existingGoal!.deadline;
+    _isPinned = widget.existingGoal!.isPinned;
+    _valueType = widget.existingGoal!.valueType;
   }
 
   Future<void> _saveGoal() async {
@@ -63,7 +64,10 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
         style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
       ),
       const SizedBox(height: 8),
-      segmentedButton(),
+      GoalValueTypeButton(
+        onSelected: {_valueType},
+        onSelectionChanged: (set) => setState(() => _valueType = set.first),
+      ),
       const SizedBox(height: 16),
       TextField(
         controller: _titleController,
@@ -72,9 +76,15 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
         ),
       ),
       const SizedBox(height: 16),
-      amountTextFields(),
+      CreationTextFields(
+        targetController: _targetController,
+        unitController: _unitController,
+      ),
       const SizedBox(height: 16),
-      listTileChangeDeadline(colors, context),
+      ListTileChangeDeadline(
+        selectedDate: _selectedDate,
+        onTap: onChangeDeadline,
+      ),
       SwitchListTile(
         contentPadding: .zero,
         title: const Text("Pin to Home View"),
@@ -109,66 +119,14 @@ class _GoalCreationSheetState extends State<GoalCreationSheet> {
     );
   }
 
-  SizedBox segmentedButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: SegmentedButton<GoalValueType>(
-        segments: const [
-          ButtonSegment(
-            value: .integer,
-            label: Text("Integer (1, 2, 3)"),
-            icon: Icon(Icons.pin_outlined),
-          ),
-          ButtonSegment(
-            value: .decimal,
-            label: Text("Decimal (1.5, 2.0)"),
-            icon: Icon(Icons.precision_manufacturing_outlined),
-          ),
-        ],
-        selected: {_valueType},
-        onSelectionChanged: (set) => setState(() => _valueType = set.first),
-      ),
+  Future<void> onChangeDeadline() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: now,
+      lastDate: DateTime(now.year + 10),
     );
-  }
-
-  Row amountTextFields() {
-    final mainContent = [
-      Expanded(
-        child: TextField(
-          controller: _targetController,
-          keyboardType: .number,
-          decoration: const InputDecoration(labelText: 'Target Amount'),
-        ),
-      ),
-      const SizedBox(width: 16),
-      Expanded(
-        child: TextField(
-          controller: _unitController,
-          decoration: const InputDecoration(
-            labelText: 'Unit (grams, oz, etc.)',
-          ),
-        ),
-      ),
-    ];
-
-    return Row(children: mainContent);
-  }
-
-  ListTile listTileChangeDeadline(ColorScheme colors, BuildContext context) {
-    return ListTile(
-      contentPadding: .zero,
-      leading: const Icon(Icons.calendar_today),
-      title: Text("Deadline: ${DateFormat('yMMMd').format(_selectedDate)}"),
-      trailing: Text("Change", style: TextStyle(color: colors.primary)),
-      onTap: () async {
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: _selectedDate,
-          firstDate: DateTime.now(),
-          lastDate: DateTime(2035),
-        );
-        if (picked != null) setState(() => _selectedDate = picked);
-      },
-    );
+    if (picked != null) setState(() => _selectedDate = picked);
   }
 }
